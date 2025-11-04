@@ -1,87 +1,78 @@
-#include "graphics.h"
+#include "main.h"
+
 #include <stdio.h>
 #include <math.h>
 
-const int screen_width = 600; 
-const int screen_height = 600; 
+const Screen screen = {600, 600};
 const int wait_time = 25;
-const int robot_size = 100;
-const int robot_shape = 3; /* Number of sides */
-
-typedef struct Coord
-{
-    double x;
-    double y; 
-} Coord; 
-
-const Coord screen_centre = {screen_width/2, screen_height/2};
-
-void calculate_regular_polygon_coords(int number_of_sides, Coord* polygon_coords, double angle) /* Array decays to a pointer */
-{
-    for(int i=0; i<number_of_sides; i++)
-    {
-        double x_i = cos(angle + 2 * M_PI * i / number_of_sides);
-        double y_i = sin(angle + 2 * M_PI * i / number_of_sides);
-        Coord coord_i = {x_i, y_i};
-        polygon_coords[i] = coord_i;
-    }
-}
-
-void transform_coordinates_to_screen(int size, Coord* coords, Coord screen_centre, double scale_factor)
-{
-    for (int i = 0; i < size; i++)
-    {
-        double current_x = coords[i].x;
-        double current_y = coords[i].y;
-
-        double transformed_x = screen_centre.x + current_x * scale_factor;
-        double transformed_y = screen_centre.y - current_y * scale_factor; /* Subtraction so that coordinates work like Cartesian*/
-
-        coords[i].x = (int)transformed_x;
-        coords[i].y = (int)transformed_y; 
-    }
-}
-
-void split_coords(int size, Coord* coords, int* xs, int* ys)
-{
-    for (int i = 0; i < size; i++)
-    {
-        xs[i] = coords[i].x;
-        ys[i] = coords[i].y;
-    }
-} 
-
-void draw_robot(double angle)
-{
-    const int s = 3; 
-    Coord triangle_coords[s];
-    calculate_regular_polygon_coords(s, triangle_coords, angle);
-    transform_coordinates_to_screen(s, triangle_coords, screen_centre, robot_size);        
-    
-    int xs[s];
-    int ys[s];
-    split_coords(s, triangle_coords, xs, ys);
-
-    clear();
-    setColour(blue);
-    fillPolygon(s, xs, ys);
-}
+const int robot_size = 8;
 
 int main(void)
 {
-    setWindowSize(screen_width, screen_height);
+    setWindowSize(screen.width, screen.height);
     double period = 10;
     double frames_per_second = 120;
     double tick = 1000/frames_per_second;
 
+    background();
+
+    Grid grid = create_grid(20, 20);
+
+    GridView grid_view = {25, screen};
+    draw_grid(&grid, &grid_view);
+
+
+    //draw_marker(&grid, &grid_view, (GridPosition){0,0});
+    foreground();
+
+    int starting_row = 5;
+    int starting_column = 0;
+    // Row then column
+
+    Coord starting_screen_position = get_grid_cell_coordinate(&grid, &grid_view, (GridPosition){starting_row, starting_column}); 
     double angle = 0;
+
+    Robot robot = {.robot_render = {starting_screen_position, angle, robot_size},
+    .grid_position = {starting_row, starting_column},
+    .direction = EAST, 
+    .marker_count = 0};
+
+    Coord test_pos = get_grid_cell_coordinate(&grid, &grid_view, (GridPosition){19, 19});
+    forward(&robot, &grid, &grid_view);
+
     while (1) 
     {
-        draw_robot(angle);
-        angle += (2*M_PI / (period * frames_per_second) );
+        if (update_animation(&robot.robot_render))
+        {
+            sleep(100);
+            if (at_marker(&robot, &grid))
+            {
+                pick_up_marker(&robot, &grid, &grid_view);
+                continue;
+            }
+
+            if (can_move_forward(&robot, &grid))
+            {
+                forward(&robot, &grid, &grid_view);
+            }
+            else 
+            {
+                drop_marker(&robot, &grid, &grid_view);
+                right(&robot);
+            }
+        }
+
+        draw_robot(&robot.robot_render);
         sleep(tick);
-        
     }
 
-}
+    }
+
+/*
+- Tidy up and optimize the code 
+- Think about dynamic arrays etc 
+- Get a nicer abstraction of the movement. 
+- THEN WORRY ABT CODE TO CONTROL
+*/
+
 
