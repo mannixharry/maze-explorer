@@ -4,17 +4,12 @@
 #include "types.h"
 #include "graphics_link.h"
 
-void draw_grid(Grid *grid, GridView *grid_view);
-void draw_grid_lines(Grid *grid, GridView *grid_view);
-void draw_grid_border(Grid *grid, GridView *grid_view);
-void draw_marker(Grid *grid, GridView *grid_view, GridPosition marker_position);
-void draw_obstacle(Grid *grid, GridView *grid_view, GridPosition obstacle_position);
-void draw_empty(Grid *grid, GridView *grid_view, GridPosition marker_position);
-void fill_grid_cell(Grid *grid, GridView *grid_view, GridPosition grid_position, colour colour);
-void draw_grid_cells(Grid *grid, GridView *grid_view);
+Coord get_tile_coord(const Grid *grid, const GridView *grid_view, TilePosition grid_position);
 
-Coord get_grid_cell_coordinate(Grid *grid, GridView *grid_view, GridPosition grid_position);
-Coord get_top_left(Grid *grid, int cell_size, Screen screen);
+void draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_position);
+void draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_position);
+void draw_empty(const Grid *grid, const GridView *grid_view, TilePosition marker_position);
+void draw_grid(const Grid *grid, const GridView *grid_view);
 
 #endif
 

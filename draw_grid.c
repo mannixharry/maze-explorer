@@ -1,23 +1,123 @@
 #include "draw_grid.h"
 
-Coord get_top_left(Grid *grid, int cell_size, Screen screen)
-{
-    const Coord screen_centre = {screen.width / 2.0, screen.height / 2.0};
-    const int top_left_x = round(screen_centre.x - grid->columns * cell_size / 2.0);
-    const int top_left_y = round(screen_centre.y - grid->rows * cell_size / 2.0);
+#define LINE_COLOUR black
+#define MARKER_COLOUR gray
+#define OBSTACLE_COLOUR black
+#define EMPTY_COLOUR white
+#define BORDER_COLOUR darkgray
 
-    const Coord top_left = {top_left_x, top_left_y};
-    return top_left;
+#define LINE_WIDTH 1
+#define BORDER_WIDTH 5
+
+static Coord get_top_left(const Grid *grid, const GridView *grid_view);
+static Dimensions get_grid_dimensions(const Grid *grid, const GridView *grid_view);
+static void draw_background(const Grid *grid, const GridView *grid_view);
+static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, colour colour);
+static void internal_draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos);
+static void internal_draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_pos);
+static void internal_draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_pos);
+static void draw_tiles(const Grid *grid, const GridView *grid_view);
+static void draw_grid_lines(const Grid *grid, const GridView *grid_view);
+static void draw_grid_border(const Grid *grid, const GridView *grid_view);
+
+Coord get_tile_coord(const Grid *grid, const GridView *grid_view, TilePosition tile_pos)
+{
+    Coord top_left = get_top_left(grid, grid_view);
+
+    int tile_coord_x = (int)round(top_left.x + tile_pos.column * grid_view->tile_size + grid_view->tile_size / 2.0);
+    int tile_coord_y = (int)round(top_left.y + tile_pos.row * grid_view->tile_size + grid_view->tile_size / 2.0);
+
+    return (Coord){tile_coord_x, tile_coord_y};
 }
 
-void draw_grid(Grid *grid, GridView *grid_view)
+void draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos)
 {
+    background();
+    internal_draw_marker(grid, grid_view, marker_pos);
+    foreground();
+}
+
+void draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_pos)
+{
+    background();
+    internal_draw_obstacle(grid, grid_view, obstacle_pos);
+    foreground();
+} 
+
+void draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_pos)
+{
+    background();
+    internal_draw_empty(grid, grid_view, empty_pos);
+    foreground();
+}
+
+void draw_grid(const Grid *grid, const GridView *grid_view)
+{
+    background();
+    draw_background(grid, grid_view);
     draw_grid_lines(grid, grid_view);
     draw_grid_border(grid, grid_view);
-    draw_grid_cells(grid, grid_view);
+    draw_tiles(grid, grid_view);
+    foreground();
 }
 
-void draw_grid_cells(Grid *grid, GridView *grid_view)
+static Coord get_top_left(const Grid *grid, const GridView *grid_view)
+{
+    Coord screen_centre = {grid_view->screen.width / 2.0, grid_view->screen.height / 2.0};
+
+    int top_left_x = (int)round(screen_centre.x - grid->columns * grid_view->tile_size / 2.0);
+    int top_left_y = (int)round(screen_centre.y - grid->rows * grid_view->tile_size / 2.0);
+
+    return (Coord){top_left_x, top_left_y};
+}
+
+static Dimensions get_grid_dimensions(const Grid *grid, const GridView *grid_view)
+{
+    int grid_width = grid->columns * grid_view->tile_size;
+    int grid_height = grid->rows * grid_view->tile_size;
+    
+    return (Dimensions){grid_width, grid_height};
+}
+
+static void draw_background(const Grid *grid, const GridView *grid_view)
+{
+    setColour(EMPTY_COLOUR);
+    setLineWidth(LINE_WIDTH);
+
+    Coord top_left = get_top_left(grid, grid_view);
+    Dimensions grid_dims = get_grid_dimensions(grid, grid_view);
+
+    fillRect(top_left.x, top_left.y, grid_dims.width, grid_dims.height);
+}
+
+static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, colour colour)
+{
+    setColour(colour);
+    setLineWidth(LINE_WIDTH);
+    int pad = THICK_LINE;
+
+    Coord tile_centre = get_tile_coord(grid, grid_view, tile_pos);
+    Coord tile_top_left = {tile_centre.x - grid_view->tile_size / 2.0, tile_centre.y - grid_view->tile_size / 2.0};
+
+    fillRect(tile_top_left.x + pad, tile_top_left.y + pad, grid_view->tile_size - 2*pad, grid_view->tile_size - 2*pad);
+}
+
+static void internal_draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos)
+{
+    fill_tile(grid, grid_view, marker_pos, MARKER_COLOUR);
+}
+
+static void internal_draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_pos)
+{
+    fill_tile(grid, grid_view, obstacle_pos, OBSTACLE_COLOUR);
+} 
+
+static void internal_draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_pos)
+{
+    fill_tile(grid, grid_view, empty_pos, EMPTY_COLOUR);
+}
+
+static void draw_tiles(const Grid *grid, const GridView *grid_view)
 {
     for (int r = 0; r < grid->rows; r++)
     {
@@ -25,80 +125,44 @@ void draw_grid_cells(Grid *grid, GridView *grid_view)
         {
             switch (grid->grid_layout[r][c])
             {
-                case EMPTY: draw_empty(grid, grid_view, (GridPosition){r,c}); break;
-                case MARKER: draw_marker(grid, grid_view, (GridPosition){r,c}); break;
-                case OBSTACLE: draw_obstacle(grid, grid_view, (GridPosition){r,c}); break;
+                case EMPTY: internal_draw_empty(grid, grid_view, (TilePosition){r,c}); break;
+                case MARKER: internal_draw_marker(grid, grid_view, (TilePosition){r,c}); break;
+                case OBSTACLE: internal_draw_obstacle(grid, grid_view, (TilePosition){r,c}); break;
             }
         }
     }
 }
 
-void fill_grid_cell(Grid *grid, GridView *grid_view, GridPosition grid_position, colour colour)
+static void draw_grid_lines(const Grid *grid, const GridView *grid_view) 
 {
-    // Update to remove magic numbers
+    setColour(LINE_COLOUR);
+    setLineWidth(LINE_WIDTH);
 
-    background();
-    const int w = 5; // Line thickness
-    Coord cell_centre = get_grid_cell_coordinate(grid, grid_view, grid_position);
-    Coord cell_top_left = {cell_centre.x - grid_view->cell_size/2, cell_centre.y - grid_view->cell_size/2};
-    setColour(colour);
-    fillRect(cell_top_left.x + w, cell_top_left.y + w, grid_view->cell_size - 2*w, grid_view->cell_size - 2*w);
-    foreground();
-}
-
-void draw_marker(Grid *grid, GridView *grid_view, GridPosition marker_position)
-{
-    fill_grid_cell(grid, grid_view, marker_position, pink);
-}
-
-void draw_obstacle(Grid *grid, GridView *grid_view, GridPosition obstacle_position)
-{
-    fill_grid_cell(grid, grid_view, obstacle_position, black);
-} 
-
-void draw_empty(Grid *grid, GridView *grid_view, GridPosition marker_position)
-{
-    fill_grid_cell(grid, grid_view, marker_position, white);
-}
-
-void draw_grid_lines(Grid *grid, GridView *grid_view) 
-{
-    Coord top_left = get_top_left(grid, grid_view->cell_size, grid_view->screen);
-
-    int grid_width = grid->columns * grid_view->cell_size;
-    int grid_height = grid->rows * grid_view->cell_size;
+    Coord top_left = get_top_left(grid, grid_view);
+    Dimensions grid_dims = get_grid_dimensions(grid, grid_view);
 
     for (int r = 0; r <= grid->rows; r++)
     {
-        int y_offset = r * grid_view->cell_size;
-        drawLine(top_left.x, top_left.y + y_offset, top_left.x + grid_width, top_left.y + y_offset);
+        int y_offset = r * grid_view->tile_size;
+        drawLine(top_left.x, top_left.y + y_offset, top_left.x + grid_dims.width, top_left.y + y_offset);
     }
     for (int c = 0; c <= grid->columns; c++)
     {
-        int x_offset = c * grid_view->cell_size;
-        drawLine(top_left.x + x_offset, top_left.y, top_left.x + x_offset, top_left.y + grid_height);
+        int x_offset = c * grid_view->tile_size;
+        drawLine(top_left.x + x_offset, top_left.y, top_left.x + x_offset, top_left.y + grid_dims.height);
     }
 }
 
-Coord get_grid_cell_coordinate(Grid *grid, GridView *grid_view, GridPosition grid_position)
+static void draw_grid_border(const Grid *grid, const GridView *grid_view)
 {
-    Coord top_left = get_top_left(grid, grid_view->cell_size, grid_view->screen);
+    setColour(BORDER_COLOUR);
+    setLineWidth(2*BORDER_WIDTH);
 
-    int screen_x = top_left.x + grid_position.column * grid_view->cell_size + grid_view->cell_size / 2;
-    int screen_y = top_left.y + grid_position.row * grid_view->cell_size + grid_view->cell_size / 2;
+    Coord top_left = get_top_left(grid, grid_view);
+    Dimensions grid_dims = get_grid_dimensions(grid, grid_view);
 
-    return (Coord){screen_x, screen_y};
-}
+    int width_pad = LINE_WIDTH + grid_dims.width;
+    int height_pad = LINE_WIDTH + grid_dims.height;
 
-void draw_grid_border(Grid *grid, GridView *grid_view)
-{
-    Coord top_left = get_top_left(grid, grid_view->cell_size, grid_view->screen);
-
-    const int grid_width = grid->columns * grid_view->cell_size;
-    const int grid_height = grid->rows * grid_view->cell_size;
-
-    setColour(red);
-    setLineWidth(5);
-    drawRect(top_left.x, top_left.y, grid_width, grid_height);
-    setLineWidth(1);
+    drawRect(top_left.x - BORDER_WIDTH, top_left.y - BORDER_WIDTH, width_pad + 2*BORDER_WIDTH, height_pad + 2*BORDER_WIDTH);
 }

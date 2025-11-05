@@ -3,23 +3,12 @@
 
 #include "draw_grid.h"
 #include "types.h"
+#include "levels.h"
 
-typedef struct PositionArray
-{
-    GridPosition *positions;
-    int positions_size; 
-} PositionArray;
-
-Grid create_empty_grid(int rows, int columns);
-Grid create_grid(int rows, int columns);
+Grid* create_grid(int rows, int columns, Level level);
 void free_grid(Grid *grid);
 
-
-PositionArray create_markers(Grid *grid);
-PositionArray create_obstacles(Grid *grid);
-void free_position_array(PositionArray *position_array);
-
-void add_cells_to_grid(Grid *grid, PositionArray position_array, Cell cell_type);
-void add_cell_to_grid(Grid *grid, GridPosition position, Cell cell_type);
+void set_tile(Grid *grid, TilePosition pos, Tile tile);
+Tile get_tile(const Grid *grid, TilePosition pos);
 
 #endif

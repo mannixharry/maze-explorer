@@ -56,7 +56,7 @@ bool update_animation(RobotRender* robot)
     }
 }
 
-GridPosition get_coord_ahead(GridPosition grid_position, Direction direction)
+TilePosition get_coord_ahead(TilePosition grid_position, Direction direction)
 {
     int row = grid_position.row;
     int column = grid_position.column;
@@ -67,7 +67,7 @@ GridPosition get_coord_ahead(GridPosition grid_position, Direction direction)
         case SOUTH: row++; break;
         case WEST: column--; break;
     }
-    return (GridPosition){row, column};
+    return (TilePosition){row, column};
 }
 
 void forward(Robot* robot, Grid *grid, GridView* grid_view)
@@ -75,11 +75,11 @@ void forward(Robot* robot, Grid *grid, GridView* grid_view)
     Coord start_position = robot->robot_render.screen_position;
     Direction direction = robot->direction;
 
-    GridPosition current_grid_position = robot->grid_position;
-    GridPosition end_grid_position = get_coord_ahead(current_grid_position, direction);
+    TilePosition current_grid_position = robot->grid_position;
+    TilePosition end_grid_position = get_coord_ahead(current_grid_position, direction);
     robot->grid_position = end_grid_position;
 
-    Coord end_position = get_grid_cell_coordinate(grid, grid_view, end_grid_position);
+    Coord end_position = get_tile_coord(grid, grid_view, end_grid_position);
 
     Animation forward_animation = {start_position, end_position, direction, direction, frames_per_move, 0};
     robot->robot_render.animation = forward_animation;
@@ -122,7 +122,7 @@ bool at_marker(Robot* robot, Grid *grid)
 
 bool can_move_forward(Robot *robot, Grid *grid)
 {
-    GridPosition coord_ahead = get_coord_ahead(robot->grid_position, robot->direction);
+    TilePosition coord_ahead = get_coord_ahead(robot->grid_position, robot->direction);
     int r = coord_ahead.row;
     int c = coord_ahead.column;
 
@@ -163,5 +163,3 @@ void drop_marker(Robot *robot, Grid *grid, GridView *grid_view)
         draw_marker(grid, grid_view, robot->grid_position);
     }
 }
-
-

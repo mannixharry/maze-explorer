@@ -1,31 +1,35 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define M_PI 3.14159265358979323846
+
 #include <stdbool.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
-typedef struct Screen
+typedef struct Dimensions
 {
-    int width;
-    int height;
-} Screen;
+    int width, height;
+} Dimensions;
 
 typedef struct Coord
 {
-    double x;
-    double y; 
+    int x, y;
 } Coord; 
 
-typedef struct GridPosition 
+typedef struct TilePosition 
 {
     int row; 
     int column;
-} GridPosition;
+} TilePosition;
 
 typedef enum Direction {NORTH, EAST, SOUTH, WEST} Direction;
 
-typedef enum Cell {EMPTY, MARKER, OBSTACLE} Cell;
+typedef enum Tile {EMPTY, MARKER, OBSTACLE} Tile;
+
+typedef enum Level {ONE, TWO, THREE, FOUR, FIVE} Level;
 
 static const double direction_angles[] = {
     [NORTH] = -M_PI/2,
@@ -36,14 +40,14 @@ static const double direction_angles[] = {
 
 typedef struct GridView
 {
-    int cell_size;
-    Screen screen; 
+    int tile_size;
+    Dimensions screen; 
 } GridView; 
 
 typedef struct Grid 
 {
     int rows, columns; 
-    Cell** grid_layout;
+    Tile** grid_layout;
 } Grid;
 
 typedef struct Animation 
@@ -68,7 +72,7 @@ typedef struct Robot
 {
     RobotRender robot_render; 
     Direction direction; 
-    GridPosition grid_position;
+    TilePosition grid_position;
     int marker_count;
 
 } Robot; 

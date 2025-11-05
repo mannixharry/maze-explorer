@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "math.h": "c",
-        "complex": "c"
+        "complex": "c",
+        "graphics_link.h": "c"
     }
 }
