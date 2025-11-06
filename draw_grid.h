@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "graphics_link.h"
+#include "grid.h"
 
 Coord get_tile_coord(const Grid *grid, const GridView *grid_view, TilePosition grid_position);
 

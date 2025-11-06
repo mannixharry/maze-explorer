@@ -5,15 +5,13 @@
 #include "draw_grid.h"
 #include "grid.h"
 
-bool update_animation(RobotRender*);
-
-void forward(Robot*, Grid*, GridView*);
-void left(Robot*);
-void right(Robot*);
-bool at_marker(Robot* robot, Grid *grid);
-bool can_move_forward(Robot* robot, Grid *grid);
-void pick_up_marker(Robot* robot, Grid* grid, GridView *grid_view);
-void drop_marker(Robot* robot, Grid* grid, GridView *grid_view);
+bool robot_update_animation(RobotRender *robot);
+bool robot_can_move_forward(Robot *robot, Grid *grid);
+void robot_forward(Robot *robot, Grid *grid, const GridView *grid_view);
+void robot_left(Robot *robot);
+void robot_right(Robot *robot);
+bool robot_at_marker(Robot *robot, const Grid *grid);
+void robot_pick_up_marker(Robot *robot, Grid *grid, const GridView *grid_view);
+void robot_drop_marker(Robot *robot, Grid *grid, const GridView *grid_view);
 
 #endif
-

@@ -7,8 +7,8 @@ static int square(int x);
 static TilePosition get_random_tile(const Grid *grid);
 static TilePosition get_random_wall_adj_tile(const Grid *grid);
 static Direction random_direction(void);
-static int random_step_size(Grid *grid);
-static int random_cluster_size(Grid *grid);
+static int random_step_size(const Grid *grid);
+static int random_cluster_size(const Grid *grid);
 
 static bool try_place_obstacle(Grid *grid, TilePosition pos);
 static int set_obstacles_in_line(Grid *grid, TilePosition *curr, Direction dir, int steps);
@@ -16,7 +16,7 @@ static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos);
 static int set_obstacle_clusters(Grid *grid, double fill_fraction);
 static void set_obstacle_circle(Grid *grid, int radius);
 
-static void copy_grid(Grid *to_grid, Grid *from_grid);
+static void copy_grid(Grid *to_grid, const Grid *from_grid);
 static void fill_unreachable_space(Grid *grid, TilePosition start_pos);
 
 static void set_random_wall_adj_marker(Grid *grid);
@@ -144,13 +144,13 @@ static Direction random_direction(void)
     return (Direction){rand() % 4};
 }
 
-static int random_step_size(Grid *grid)
+static int random_step_size(const Grid *grid)
 {
     const int max_step_size = min(grid->rows, grid->columns)/5;
     return 1 + rand() % max_step_size;
 }
 
-static int random_cluster_size(Grid *grid)
+static int random_cluster_size(const Grid *grid)
 {
     const int min_cluster_size = min(grid->rows, grid->columns)/5;
     return min_cluster_size + rand() % (int)(1.5 * min_cluster_size);
@@ -227,7 +227,7 @@ static void set_obstacle_circle(Grid *grid, int radius)
     }
 }
 
-static void copy_grid(Grid *to_grid, Grid *from_grid)
+static void copy_grid(Grid *to_grid, const Grid *from_grid)
 {
     if (to_grid->rows != from_grid->rows || to_grid->columns != from_grid->columns)
     {

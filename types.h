@@ -52,27 +52,27 @@ typedef struct Grid
 
 typedef struct Animation 
 {
-    Coord start_position;
-    Coord end_position; 
-    Direction start_direction;
-    Direction end_direction; 
-    int number_of_frames;
-    int current_frame;
+    Coord start_pos;
+    Coord end_pos; 
+    Direction start_dir;
+    Direction end_dir; 
+    int frame_count;
+    int curr_frame;
 } Animation;
 
 typedef struct RobotRender
 {
-    Coord screen_position; 
+    Coord screen_pos; 
     double angle; 
     int size;
-    Animation animation;  
+    Animation anim;  
 } RobotRender;
 
 typedef struct Robot
 {
     RobotRender robot_render; 
-    Direction direction; 
-    TilePosition grid_position;
+    Direction dir; 
+    TilePosition grid_pos;
     int marker_count;
 
 } Robot; 

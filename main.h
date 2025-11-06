@@ -6,6 +6,7 @@
 #include "draw_grid.h"
 #include "robot_actions.h"
 #include "grid.h"
+#include "simulation.h"
 
 extern const int screen_width;
 extern const int screen_height;

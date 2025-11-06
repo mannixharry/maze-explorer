@@ -123,7 +123,7 @@ static void draw_tiles(const Grid *grid, const GridView *grid_view)
     {
         for (int c = 0; c < grid->columns; c++)
         {
-            switch (grid->grid_layout[r][c])
+            switch (get_tile(grid, (TilePosition){r,c}))
             {
                 case EMPTY: internal_draw_empty(grid, grid_view, (TilePosition){r,c}); break;
                 case MARKER: internal_draw_marker(grid, grid_view, (TilePosition){r,c}); break;

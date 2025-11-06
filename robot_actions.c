@@ -1,7 +1,90 @@
 #include "robot_actions.h"
-const int frames_per_move = 60;
 
-double principle_angle(double theta)
+static const int FRAMES_PER_ANIM = 30;
+
+static double principal_angle(double theta);
+static void update_rotation(RobotRender *robot);
+static void update_pos(RobotRender *robot);
+static void turn(Robot *robot, int left_or_right);
+
+bool robot_update_animation(RobotRender *robot)
+{
+    Animation *anim = &robot->anim;
+    if (anim->curr_frame == anim->frame_count)
+    {
+        robot->screen_pos = anim->end_pos;
+        robot->angle = direction_angles[anim->end_dir];
+        return true;
+    }
+    else 
+    {
+        anim->curr_frame++; 
+        update_pos(robot);
+        update_rotation(robot);
+        return false;
+    }
+}
+
+bool robot_can_move_forward(Robot *robot, Grid *grid)
+{
+    TilePosition tile_ahead = get_tile_ahead(grid, robot->grid_pos, robot->dir);
+    if (!check_tile_in_bounds(grid, tile_ahead)) {return false;}
+    return get_tile(grid, tile_ahead) != OBSTACLE;
+}
+
+void robot_forward(Robot *robot, Grid *grid, const GridView *grid_view)
+{
+    Coord start_pos = robot->robot_render.screen_pos;
+    Direction dir = robot->dir;
+
+    TilePosition curr_grid_pos = robot->grid_pos;
+    TilePosition end_grid_pos = get_tile_ahead(grid, curr_grid_pos, dir);
+    robot->grid_pos = end_grid_pos;
+
+    Coord end_pos = get_tile_coord(grid, grid_view, end_grid_pos);
+
+    Animation forward_anim = {start_pos, end_pos, dir, dir, FRAMES_PER_ANIM, 0};
+    robot->robot_render.anim = forward_anim;
+}
+
+void robot_left(Robot *robot)
+{
+    turn(robot, -1);
+}
+
+void robot_right(Robot *robot)
+{
+    turn(robot, 1);
+}
+
+bool robot_at_marker(Robot *robot, const Grid *grid)
+{
+    return get_tile(grid, robot->grid_pos) == MARKER;
+}
+
+void robot_pick_up_marker(Robot *robot, Grid *grid, const GridView *grid_view)
+{
+    if (get_tile(grid, robot->grid_pos) == MARKER)
+    {
+        set_tile(grid, robot->grid_pos, EMPTY);
+        draw_empty(grid, grid_view, robot->grid_pos);
+    }
+    robot->marker_count++;
+}
+
+void robot_drop_marker(Robot *robot, Grid *grid, const GridView *grid_view)
+{
+    bool robot_has_marker = robot->marker_count > 0;
+    bool tile_empty = get_tile(grid, robot->grid_pos) == EMPTY;
+
+    if (robot_has_marker && tile_empty)
+    {
+        set_tile(grid, robot->grid_pos, MARKER);
+        draw_marker(grid, grid_view, robot->grid_pos);
+    }
+}
+
+static double principal_angle(double theta)
 {
     double new_theta = fmod(theta, 2*M_PI);
     if (new_theta > M_PI) {new_theta -= 2*M_PI;}
@@ -9,142 +92,42 @@ double principle_angle(double theta)
     return new_theta;
 }
 
-void update_rotation(RobotRender* robot)
+static void update_rotation(RobotRender *robot)
 {
-    Animation* animation = &robot->animation;
-    double progress = (double)animation->current_frame / (double)animation->number_of_frames;
+    Animation* anim = &robot->anim;
+    double progress = (double)anim->curr_frame / (double)anim->frame_count;
 
-    double delta_theta = direction_angles[animation->end_direction] - direction_angles[animation->start_direction];
-    double principle_delta_theta = principle_angle(delta_theta);
+    double delta_angle = direction_angles[anim->end_dir] - direction_angles[anim->start_dir];
+    double principal_delta_angle = principal_angle(delta_angle);
 
-    double new_theta = direction_angles[animation->start_direction] + progress * principle_delta_theta;
+    double new_angle = direction_angles[anim->start_dir] + progress * principal_delta_angle;
 
-    robot->angle = new_theta;
+    robot->angle = new_angle;
 }
 
-void update_position(RobotRender* robot)
+static void update_pos(RobotRender *robot)
 {
-    Animation* animation = &robot->animation;
+    Animation* anim = &robot->anim;
 
-    double progress = (double)animation->current_frame / (double)animation->number_of_frames;
+    double progress = (double)anim->curr_frame / (double)anim->frame_count;
 
-    double delta_x = animation->end_position.x - animation->start_position.x;
-    double delta_y = animation->end_position.y - animation->start_position.y;
+    double delta_x = anim->end_pos.x - anim->start_pos.x;
+    double delta_y = anim->end_pos.y - anim->start_pos.y;
 
-    double new_x = animation->start_position.x + progress * delta_x;
-    double new_y = animation->start_position.y + progress * delta_y;
+    double new_x = anim->start_pos.x + progress * delta_x;
+    double new_y = anim->start_pos.y + progress * delta_y;
 
-    robot->screen_position = (Coord){new_x, new_y};
+    robot->screen_pos = (Coord){new_x, new_y};
 }
 
-bool update_animation(RobotRender* robot)
+static void turn(Robot *robot, int delta_dir)
 {
-    Animation* animation = &robot->animation;
-    if (animation->current_frame == animation->number_of_frames)
-    {
-        robot->screen_position = animation->end_position;
-        robot->angle = direction_angles[animation->end_direction];
-        return true;
-    }
-    else 
-    {
-        animation->current_frame++; 
-        update_position(robot);
-        update_rotation(robot);
+    Coord pos = robot->robot_render.screen_pos;
+    Direction start_dir = robot->dir;
+    Direction end_dir = (start_dir + delta_dir) % 4;
 
-        return false;
-    }
-}
+    Animation turn_anim = {pos, pos, start_dir, end_dir, FRAMES_PER_ANIM, 0};
 
-void forward(Robot* robot, Grid *grid, GridView* grid_view)
-{
-    Coord start_position = robot->robot_render.screen_position;
-    Direction direction = robot->direction;
-
-    TilePosition current_grid_position = robot->grid_position;
-    TilePosition end_grid_position = get_tile_ahead(grid, current_grid_position, direction);
-    robot->grid_position = end_grid_position;
-
-    Coord end_position = get_tile_coord(grid, grid_view, end_grid_position);
-
-    Animation forward_animation = {start_position, end_position, direction, direction, frames_per_move, 0};
-    robot->robot_render.animation = forward_animation;
-}
-
-void turn(Robot *robot, int delta)
-{
-    Coord position = robot->robot_render.screen_position;
-    Direction start_direction = robot->direction;
-    Direction end_direction = (start_direction + delta) % 4;
-
-    Animation left_animation = {position, position, start_direction, end_direction, frames_per_move, 0};
-
-    robot->direction = end_direction;
-    robot->robot_render.animation = left_animation;
-}
-
-void right(Robot *robot)
-{
-    turn(robot, 1);
-}
-
-void left(Robot *robot)
-{
-    turn(robot, -1);
-}
-
-bool at_marker(Robot* robot, Grid *grid)
-{
-    int r = robot->grid_position.row;
-    int c = robot->grid_position.column;
-
-    if (grid->grid_layout[r][c] == MARKER)
-    {
-        return true;
-    }
-    return false; 
-}
-
-bool can_move_forward(Robot *robot, Grid *grid)
-{
-    TilePosition coord_ahead = get_tile_ahead(grid, robot->grid_position, robot->direction);
-    int r = coord_ahead.row;
-    int c = coord_ahead.column;
-
-    if (r < 0 || r >= grid->rows || c < 0 || c >= grid->columns)
-    {
-        return false;
-    }
-    if (grid->grid_layout[r][c] == OBSTACLE)
-    {
-        return false;
-    }
-
-    return true; 
-}
-
-void pick_up_marker(Robot *robot, Grid *grid, GridView *grid_view)
-{
-    int r = robot->grid_position.row;
-    int c = robot->grid_position.column;
-
-    if (grid->grid_layout[r][c] == MARKER)
-    {
-        grid->grid_layout[r][c] = EMPTY;
-        draw_empty(grid, grid_view, robot->grid_position);
-    }
-
-    robot->marker_count++;
-}
-
-void drop_marker(Robot *robot, Grid *grid, GridView *grid_view)
-{
-    int r = robot->grid_position.row;
-    int c = robot->grid_position.column;
-
-    if (grid->grid_layout[r][c] == EMPTY && robot->marker_count > 0) 
-    {
-        grid->grid_layout[r][c] = MARKER;
-        draw_marker(grid, grid_view, robot->grid_position);
-    }
+    robot->dir = end_dir;
+    robot->robot_render.anim = turn_anim;
 }

@@ -34,7 +34,7 @@ void draw_robot(const RobotRender *robot_render)
     set_shape(robot_fCoords);
     set_angle(robot_fCoords, robot_render->angle);
     enlarge_fCoords(robot_fCoords, robot_render->size);
-    set_pos(robot_fCoords, robot_render->screen_position);       
+    set_pos(robot_fCoords, robot_render->screen_pos);       
 
     int xs[ROBOT_SIDES];
     int ys[ROBOT_SIDES];

@@ -33,7 +33,6 @@ Grid* create_grid(int rows, int columns, Level level)
     {
         set_obstacles(grid, level); // very important obstacles set first
         set_markers(grid, level);
-        
     }
     return grid; 
 }
@@ -89,7 +88,7 @@ void fill_grid(Grid* grid, Tile tile)
     {
         for (size_t c = 0; c < grid->columns; c++)
         {
-            grid->grid_layout[r][c] = tile;
+            set_tile(grid, (TilePosition){r,c}, tile);
         }
     }
 }
@@ -109,7 +108,6 @@ static Grid* create_empty_grid(size_t rows, size_t columns)
     fill_grid(grid, EMPTY);
     return grid;
 }
-
 
 static Grid* malloc_empty_grid(size_t rows, size_t columns)
 {
