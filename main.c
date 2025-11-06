@@ -18,16 +18,15 @@ int main(void)
 
     background();
 
-    Grid *grid = create_grid(20, 20, (Level){ONE});
+    Grid *grid = create_grid(20, 20, (Level){FIVE});
 
     GridView grid_view = {25, screen};
     draw_grid(grid, &grid_view);
 
-
     //draw_marker(&grid, &grid_view, (GridPosition){0,0});
     foreground();
 
-    int starting_row = 5;
+    int starting_row = 3;
     int starting_column = 0;
     // Row then column
 

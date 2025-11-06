@@ -25,11 +25,11 @@ typedef struct TilePosition
     int column;
 } TilePosition;
 
-typedef enum Direction {NORTH, EAST, SOUTH, WEST} Direction;
+typedef enum Direction {NORTH, EAST, SOUTH, WEST, DIRECTION_COUNT} Direction;
 
 typedef enum Tile {EMPTY, MARKER, OBSTACLE} Tile;
 
-typedef enum Level {ONE, TWO, THREE, FOUR, FIVE} Level;
+typedef enum Level {ONE, TWO, THREE, FOUR, FIVE, SHADOW} Level;
 
 static const double direction_angles[] = {
     [NORTH] = -M_PI/2,

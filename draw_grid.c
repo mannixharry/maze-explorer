@@ -94,7 +94,7 @@ static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition 
 {
     setColour(colour);
     setLineWidth(LINE_WIDTH);
-    int pad = THICK_LINE;
+    int pad = round(grid_view->tile_size/5.0);
 
     Coord tile_centre = get_tile_coord(grid, grid_view, tile_pos);
     Coord tile_top_left = {tile_centre.x - grid_view->tile_size / 2.0, tile_centre.y - grid_view->tile_size / 2.0};

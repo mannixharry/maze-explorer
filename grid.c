@@ -6,6 +6,7 @@ static void (*marker_setters[])(Grid*) = {
     set_markers_L3,
     set_markers_L4,
     set_markers_L5,
+    set_markers_LS,
 };
 
 static void (*obstacle_setters[])(Grid*) = {
@@ -14,6 +15,7 @@ static void (*obstacle_setters[])(Grid*) = {
     set_obstacles_L3,
     set_obstacles_L4,
     set_obstacles_L5,
+    set_obstacles_LS,
 };
 
 static Grid* create_empty_grid(size_t rows, size_t columns);
@@ -27,12 +29,23 @@ Grid* create_grid(int rows, int columns, Level level)
         (size_t)rows, (size_t)columns
     );
     
-    if (ONE <= level && level <= FIVE)
+    if (ONE <= level && level <= SHADOW)
     {
+        set_obstacles(grid, level); // very important obstacles set first
         set_markers(grid, level);
-        set_obstacles(grid, level);
+        
     }
     return grid; 
+}
+
+void free_grid(Grid* grid)
+{
+    for (int r = 0; r < grid->rows; r++)
+    {
+        free(grid->grid_layout[r]);
+    }
+    free(grid->grid_layout);
+    free(grid);
 }
 
 void set_tile(Grid *grid, TilePosition pos, Tile tile)
@@ -44,17 +57,41 @@ void set_tile(Grid *grid, TilePosition pos, Tile tile)
 
 Tile get_tile(const Grid *grid, TilePosition pos) 
 {
+    if (pos.row < 0 || pos.row >= grid->rows || pos.column < 0 || pos.column >= grid->columns) {return OBSTACLE;}
     return grid->grid_layout[pos.row][pos.column];
 }
 
-void free_grid(Grid* grid)
+TilePosition get_tile_ahead(const Grid *grid, TilePosition tile_pos, Direction direction)
 {
-    for (int r = 0; r < grid->rows; r++)
+    int row = tile_pos.row;
+    int column = tile_pos.column;
+    switch (direction)
     {
-        free(grid->grid_layout[r]);
+        case NORTH: row--; break;
+        case EAST: column++; break;
+        case SOUTH: row++; break;
+        case WEST: column--; break;
     }
-    free(grid->grid_layout);
-    free(grid);
+    return (TilePosition){row, column};
+}
+
+bool check_tile_in_bounds(const Grid *grid, TilePosition tile_pos)
+{
+    int r = tile_pos.row;
+    int c = tile_pos.column;
+
+    return (r >= 0 && r < grid->rows && c >= 0 && c < grid->columns);
+}
+
+void fill_grid(Grid* grid, Tile tile)
+{
+    for (size_t r = 0; r < grid->rows; r++)
+    {
+        for (size_t c = 0; c < grid->columns; c++)
+        {
+            grid->grid_layout[r][c] = tile;
+        }
+    }
 }
 
 static Grid* create_empty_grid(size_t rows, size_t columns)
@@ -69,16 +106,10 @@ static Grid* create_empty_grid(size_t rows, size_t columns)
     grid->rows = rows;
     grid->columns = columns;
     
-    for (size_t r = 0; r < rows; r++)
-    {
-        for (size_t c = 0; c < columns; c++)
-        {
-            grid->grid_layout[r][c] = EMPTY;
-        }
-    }
-
+    fill_grid(grid, EMPTY);
     return grid;
 }
+
 
 static Grid* malloc_empty_grid(size_t rows, size_t columns)
 {

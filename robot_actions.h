@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "draw_grid.h"
+#include "grid.h"
 
 bool update_animation(RobotRender*);
 

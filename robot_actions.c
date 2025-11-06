@@ -56,27 +56,13 @@ bool update_animation(RobotRender* robot)
     }
 }
 
-TilePosition get_coord_ahead(TilePosition grid_position, Direction direction)
-{
-    int row = grid_position.row;
-    int column = grid_position.column;
-    switch (direction)
-    {
-        case NORTH: row--; break;
-        case EAST: column++; break;
-        case SOUTH: row++; break;
-        case WEST: column--; break;
-    }
-    return (TilePosition){row, column};
-}
-
 void forward(Robot* robot, Grid *grid, GridView* grid_view)
 {
     Coord start_position = robot->robot_render.screen_position;
     Direction direction = robot->direction;
 
     TilePosition current_grid_position = robot->grid_position;
-    TilePosition end_grid_position = get_coord_ahead(current_grid_position, direction);
+    TilePosition end_grid_position = get_tile_ahead(grid, current_grid_position, direction);
     robot->grid_position = end_grid_position;
 
     Coord end_position = get_tile_coord(grid, grid_view, end_grid_position);
@@ -119,10 +105,9 @@ bool at_marker(Robot* robot, Grid *grid)
     return false; 
 }
 
-
 bool can_move_forward(Robot *robot, Grid *grid)
 {
-    TilePosition coord_ahead = get_coord_ahead(robot->grid_position, robot->direction);
+    TilePosition coord_ahead = get_tile_ahead(grid, robot->grid_position, robot->direction);
     int r = coord_ahead.row;
     int c = coord_ahead.column;
 
