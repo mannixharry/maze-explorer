@@ -3,6 +3,7 @@
         "math.h": "c",
         "complex": "c",
         "graphics_link.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "main.h": "c"
     }
 }

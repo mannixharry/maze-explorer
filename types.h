@@ -27,7 +27,7 @@ typedef struct TilePosition
 
 typedef enum Direction {NORTH, EAST, SOUTH, WEST, DIRECTION_COUNT} Direction;
 
-typedef enum Tile {EMPTY, MARKER, OBSTACLE} Tile;
+typedef enum Tile {EMPTY, MARKER, OBSTACLE, UNKNOWN} Tile;
 
 typedef enum Level {ONE, TWO, THREE, FOUR, FIVE, SHADOW} Level;
 
@@ -70,12 +70,8 @@ typedef struct RobotRender
 
 typedef struct Robot
 {
-    RobotRender robot_render; 
-    Direction dir; 
     TilePosition grid_pos;
+    Direction dir; 
     int marker_count;
-
 } Robot; 
-
-
 #endif

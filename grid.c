@@ -60,6 +60,7 @@ Tile get_tile(const Grid *grid, TilePosition pos)
     return grid->grid_layout[pos.row][pos.column];
 }
 
+// doesnt use grid (refactor)
 TilePosition get_tile_ahead(const Grid *grid, TilePosition tile_pos, Direction direction)
 {
     int row = tile_pos.row;

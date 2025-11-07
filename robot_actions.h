@@ -7,9 +7,9 @@
 
 bool robot_update_animation(RobotRender *robot);
 bool robot_can_move_forward(Robot *robot, Grid *grid);
-void robot_forward(Robot *robot, Grid *grid, const GridView *grid_view);
-void robot_left(Robot *robot);
-void robot_right(Robot *robot);
+void robot_forward(Robot *robot, RobotRender *robot_render, Grid *grid, const GridView *grid_view);
+void robot_left(Robot *robot, RobotRender *robot_render);
+void robot_right(Robot *robot, RobotRender *robot_render);
 bool robot_at_marker(Robot *robot, const Grid *grid);
 void robot_pick_up_marker(Robot *robot, Grid *grid, const GridView *grid_view);
 void robot_drop_marker(Robot *robot, Grid *grid, const GridView *grid_view);

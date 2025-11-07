@@ -1,19 +1,13 @@
 #include "levels.h"
 
-static int random_range(int a, int b);
-static int min(int a, int b);
-static int square(int x);
-
-static TilePosition get_random_tile(const Grid *grid);
 static TilePosition get_random_wall_adj_tile(const Grid *grid);
-static Direction random_direction(void);
 static int random_step_size(const Grid *grid);
 static int random_cluster_size(const Grid *grid);
 
 static bool try_place_obstacle(Grid *grid, TilePosition pos);
 static int set_obstacles_in_line(Grid *grid, TilePosition *curr, Direction dir, int steps);
 static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos);
-static int set_obstacle_clusters(Grid *grid, double fill_fraction);
+static void set_obstacle_clusters(Grid *grid, double fill_fraction);
 static void set_obstacle_circle(Grid *grid, int radius);
 
 static void copy_grid(Grid *to_grid, const Grid *from_grid);
@@ -24,6 +18,28 @@ static void set_random_marker(Grid *grid);
 static void set_random_markers(Grid *grid, int marker_count);
 
 static bool in_circle(TilePosition pos, int radius, double centre_x, double centre_y);
+
+TilePosition get_random_tile(const Grid *grid)
+{
+    int r = rand() % grid->rows;
+    int c = rand() % grid->columns;
+    return (TilePosition){r, c};
+}
+
+TilePosition get_random_empty_tile(const Grid *grid)
+{
+    TilePosition random_tile = get_random_tile(grid);
+    while (get_tile(grid, random_tile) != EMPTY)
+    {
+        random_tile = get_random_tile(grid);
+    }
+    return random_tile;
+}
+
+Direction get_random_direction(void)
+{
+    return (Direction){rand() % 4};
+}
 
 void set_markers_L1(Grid *grid)
 {
@@ -99,28 +115,6 @@ void set_obstacles_LS(Grid *grid)
     fill_grid(grid, OBSTACLE);
 }
 
-static int random_range(int a, int b)
-{
-    return a + rand() % (b - a + 1);
-}
-
-static int min(int a, int b)
-{
-    return a <= b ? a : b;
-}
-
-static int square(int x)
-{
-    return x * x;
-}
-
-static TilePosition get_random_tile(const Grid *grid)
-{
-    int r = rand() % grid->rows;
-    int c = rand() % grid->columns;
-    return (TilePosition){r, c};
-}
-
 static TilePosition get_random_wall_adj_tile(const Grid *grid)
 {
     int r, c;
@@ -137,11 +131,6 @@ static TilePosition get_random_wall_adj_tile(const Grid *grid)
         r = rand() % grid->rows; c = grid->columns - 1; break;
     }
     return (TilePosition){r,c};
-}
-
-static Direction random_direction(void)
-{
-    return (Direction){rand() % 4};
 }
 
 static int random_step_size(const Grid *grid)
@@ -190,7 +179,7 @@ static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos)
     int cluster_size = random_cluster_size(grid);
     while (placed < cluster_size)
     {
-        Direction rand_dir = random_direction();
+        Direction rand_dir = get_random_direction();
         int rand_step = random_step_size(grid);
 
         placed += set_obstacles_in_line(grid, &curr_pos, rand_dir, rand_step);
@@ -198,7 +187,7 @@ static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos)
     return placed;
 }
 
-static int set_obstacle_clusters(Grid *grid, double fill_fraction)
+static void set_obstacle_clusters(Grid *grid, double fill_fraction)
 {
     int placed = 0; 
     const int min_obstacle_count = round(grid->rows * grid->columns * fill_fraction);
@@ -288,12 +277,8 @@ static void set_random_wall_adj_marker(Grid *grid)
 
 static void set_random_marker(Grid *grid)
 {
-    TilePosition random_tile = get_random_tile(grid);
-    while (get_tile(grid, random_tile) != EMPTY)
-    {
-        random_tile = get_random_tile(grid);
-    }
-    set_tile(grid, random_tile, MARKER);
+    TilePosition random_empty_tile = get_random_empty_tile(grid);
+    set_tile(grid, random_empty_tile, MARKER);
 }
 
 static void set_random_markers(Grid *grid, int marker_count)

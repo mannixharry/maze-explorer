@@ -3,7 +3,6 @@
 
 #include "types.h"
 
-
 typedef struct TilePosQueue 
 {
     int head, tail;
@@ -11,6 +10,13 @@ typedef struct TilePosQueue
     TilePosition *tiles; 
 
 } TilePosQueue;
+
+int min(int a, int b);
+int max(int a, int b);
+int random_range(int a, int b);
+int square(int x);
+
+
 
 TilePosQueue create_tile_pos_queue(size_t max_size);
 bool is_tile_queue_empty(const TilePosQueue* queue);

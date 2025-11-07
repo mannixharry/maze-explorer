@@ -10,7 +10,8 @@ Coord get_tile_coord(const Grid *grid, const GridView *grid_view, TilePosition g
 void draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_position);
 void draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_position);
 void draw_empty(const Grid *grid, const GridView *grid_view, TilePosition marker_position);
-void draw_grid(const Grid *grid, const GridView *grid_view);
+void draw_debug(const Grid *grid, const GridView *grid_view, TilePosition debug_position);
 
+void draw_grid(const Grid *grid, const GridView *grid_view);
 #endif
 

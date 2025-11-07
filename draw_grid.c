@@ -1,10 +1,12 @@
 #include "draw_grid.h"
 
+
 #define LINE_COLOUR black
 #define MARKER_COLOUR gray
 #define OBSTACLE_COLOUR black
 #define EMPTY_COLOUR white
 #define BORDER_COLOUR darkgray
+#define DEBUG_COLOUR cyan
 
 #define LINE_WIDTH 1
 #define BORDER_WIDTH 5
@@ -48,6 +50,13 @@ void draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_
 {
     background();
     internal_draw_empty(grid, grid_view, empty_pos);
+    foreground();
+}
+
+void draw_debug(const Grid *grid, const GridView *grid_view, TilePosition debug_pos)
+{
+    background();
+    fill_tile(grid, grid_view, debug_pos, DEBUG_COLOUR);
     foreground();
 }
 

@@ -5,7 +5,7 @@ static const int FRAMES_PER_ANIM = 30;
 static double principal_angle(double theta);
 static void update_rotation(RobotRender *robot);
 static void update_pos(RobotRender *robot);
-static void turn(Robot *robot, int left_or_right);
+static void turn(Robot *robot, RobotRender *robot_render, int left_or_right);
 
 bool robot_update_animation(RobotRender *robot)
 {
@@ -32,9 +32,9 @@ bool robot_can_move_forward(Robot *robot, Grid *grid)
     return get_tile(grid, tile_ahead) != OBSTACLE;
 }
 
-void robot_forward(Robot *robot, Grid *grid, const GridView *grid_view)
+void robot_forward(Robot *robot, RobotRender *robot_render, Grid *grid, const GridView *grid_view)
 {
-    Coord start_pos = robot->robot_render.screen_pos;
+    Coord start_pos = robot_render->screen_pos;
     Direction dir = robot->dir;
 
     TilePosition curr_grid_pos = robot->grid_pos;
@@ -44,17 +44,17 @@ void robot_forward(Robot *robot, Grid *grid, const GridView *grid_view)
     Coord end_pos = get_tile_coord(grid, grid_view, end_grid_pos);
 
     Animation forward_anim = {start_pos, end_pos, dir, dir, FRAMES_PER_ANIM, 0};
-    robot->robot_render.anim = forward_anim;
+    robot_render->anim = forward_anim;
 }
 
-void robot_left(Robot *robot)
+void robot_left(Robot *robot, RobotRender *robot_render)
 {
-    turn(robot, -1);
+    turn(robot, robot_render, -1);
 }
 
-void robot_right(Robot *robot)
+void robot_right(Robot *robot, RobotRender *robot_render)
 {
-    turn(robot, 1);
+    turn(robot, robot_render, 1);
 }
 
 bool robot_at_marker(Robot *robot, const Grid *grid)
@@ -120,14 +120,14 @@ static void update_pos(RobotRender *robot)
     robot->screen_pos = (Coord){new_x, new_y};
 }
 
-static void turn(Robot *robot, int delta_dir)
+static void turn(Robot *robot, RobotRender *robot_render, int delta_dir)
 {
-    Coord pos = robot->robot_render.screen_pos;
+    Coord pos = robot_render->screen_pos;
     Direction start_dir = robot->dir;
     Direction end_dir = (start_dir + delta_dir) % 4;
 
     Animation turn_anim = {pos, pos, start_dir, end_dir, FRAMES_PER_ANIM, 0};
 
     robot->dir = end_dir;
-    robot->robot_render.anim = turn_anim;
+    robot_render->anim = turn_anim;
 }
