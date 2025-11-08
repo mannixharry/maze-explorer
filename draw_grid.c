@@ -6,7 +6,7 @@
 #define OBSTACLE_COLOUR black
 #define EMPTY_COLOUR white
 #define BORDER_COLOUR darkgray
-#define DEBUG_COLOUR cyan
+#define DEBUG_COLOUR red
 
 #define LINE_WIDTH 1
 #define BORDER_WIDTH 5
@@ -14,7 +14,8 @@
 static Coord get_top_left(const Grid *grid, const GridView *grid_view);
 static Dimensions get_grid_dimensions(const Grid *grid, const GridView *grid_view);
 static void draw_background(const Grid *grid, const GridView *grid_view);
-static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, colour colour);
+static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, int pad, colour colour);
+static void fill_tile_circle(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, int pad, colour colour);
 static void internal_draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos);
 static void internal_draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_pos);
 static void internal_draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_pos);
@@ -56,7 +57,8 @@ void draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_
 void draw_debug(const Grid *grid, const GridView *grid_view, TilePosition debug_pos)
 {
     background();
-    fill_tile(grid, grid_view, debug_pos, DEBUG_COLOUR);
+    const int debug_pad = round(grid_view->tile_size/3.0);
+    fill_tile_circle(grid, grid_view, debug_pos, debug_pad, DEBUG_COLOUR);
     foreground();
 }
 
@@ -99,31 +101,42 @@ static void draw_background(const Grid *grid, const GridView *grid_view)
     fillRect(top_left.x, top_left.y, grid_dims.width, grid_dims.height);
 }
 
-static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, colour colour)
+static void fill_tile(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, int pad, colour colour)
 {
     setColour(colour);
     setLineWidth(LINE_WIDTH);
-    int pad = round(grid_view->tile_size/5.0);
-
     Coord tile_centre = get_tile_coord(grid, grid_view, tile_pos);
     Coord tile_top_left = {tile_centre.x - grid_view->tile_size / 2.0, tile_centre.y - grid_view->tile_size / 2.0};
 
     fillRect(tile_top_left.x + pad, tile_top_left.y + pad, grid_view->tile_size - 2*pad, grid_view->tile_size - 2*pad);
 }
 
+static void fill_tile_circle(const Grid *grid, const GridView *grid_view, TilePosition tile_pos, int pad, colour colour)
+{
+    setColour(colour);
+    setLineWidth(LINE_WIDTH);
+    Coord tile_centre = get_tile_coord(grid, grid_view, tile_pos);
+    Coord tile_top_left = {tile_centre.x - grid_view->tile_size / 2.0, tile_centre.y - grid_view->tile_size / 2.0};
+
+    fillArc(tile_top_left.x + pad, tile_top_left.y + pad, grid_view->tile_size - 2*pad, grid_view->tile_size - 2*pad, 0, 360);
+}
+
 static void internal_draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos)
 {
-    fill_tile(grid, grid_view, marker_pos, MARKER_COLOUR);
+    const int default_pad = round(grid_view->tile_size/8.0);
+    fill_tile(grid, grid_view, marker_pos, default_pad, MARKER_COLOUR);
 }
 
 static void internal_draw_obstacle(const Grid *grid, const GridView *grid_view, TilePosition obstacle_pos)
 {
-    fill_tile(grid, grid_view, obstacle_pos, OBSTACLE_COLOUR);
+    const int default_pad = round(grid_view->tile_size/8.0);
+    fill_tile(grid, grid_view, obstacle_pos, default_pad, OBSTACLE_COLOUR);
 } 
 
 static void internal_draw_empty(const Grid *grid, const GridView *grid_view, TilePosition empty_pos)
 {
-    fill_tile(grid, grid_view, empty_pos, EMPTY_COLOUR);
+    const int default_pad = round(grid_view->tile_size/8.0);
+    fill_tile(grid, grid_view, empty_pos, default_pad, EMPTY_COLOUR);
 }
 
 static void draw_tiles(const Grid *grid, const GridView *grid_view)

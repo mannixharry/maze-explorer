@@ -1,21 +1,21 @@
 #include "grid.h"
 
 static void (*marker_setters[])(Grid*) = {
+    set_markers_LS,
     set_markers_L1,
     set_markers_L2,
     set_markers_L3,
     set_markers_L4,
     set_markers_L5,
-    set_markers_LS,
 };
 
 static void (*obstacle_setters[])(Grid*) = {
+    set_obstacles_LS,
     set_obstacles_L1,
     set_obstacles_L2,
     set_obstacles_L3,
     set_obstacles_L4,
     set_obstacles_L5,
-    set_obstacles_LS,
 };
 
 static Grid* create_empty_grid(size_t rows, size_t columns);
@@ -29,7 +29,7 @@ Grid* create_grid(int rows, int columns, Level level)
         (size_t)rows, (size_t)columns
     );
     
-    if (ONE <= level && level <= SHADOW)
+    if (SHADOW <= level && level <= FIVE)
     {
         set_obstacles(grid, level); // very important obstacles set first
         set_markers(grid, level);
@@ -60,8 +60,8 @@ Tile get_tile(const Grid *grid, TilePosition pos)
     return grid->grid_layout[pos.row][pos.column];
 }
 
-// doesnt use grid (refactor)
-TilePosition get_tile_ahead(const Grid *grid, TilePosition tile_pos, Direction direction)
+
+TilePosition get_tile_ahead(TilePosition tile_pos, Direction direction)
 {
     int row = tile_pos.row;
     int column = tile_pos.column;
@@ -71,6 +71,7 @@ TilePosition get_tile_ahead(const Grid *grid, TilePosition tile_pos, Direction d
         case EAST: column++; break;
         case SOUTH: row++; break;
         case WEST: column--; break;
+        default: break;
     }
     return (TilePosition){row, column};
 }

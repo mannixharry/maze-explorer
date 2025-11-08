@@ -8,6 +8,7 @@
 #include "grid.h"
 #include "simulation.h"
 #include "helper.h"
+#include "config.h"
 
 extern const int screen_width;
 extern const int screen_height;

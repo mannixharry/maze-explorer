@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void update_robot_memory(RobotMemory *robot_memory, Tile** data, Tile* flat_data, MemoryPosition new_origin, int rows, int columns);
-static void update_row_pointers(Tile** new_data, Tile* new_flat_data, int rows, int columns);
-static Tile* realloc_flat_data(Tile* flat_data, int rows, int columns);
-static Tile** realloc_data(Tile** data, int rows);
+static void update_robot_memory(RobotMemory *robot_memory, MTile** data, MTile* flat_data, MemoryPosition new_origin, int rows, int columns);
+static void update_row_pointers(MTile** new_data, MTile* new_flat_data, int rows, int columns);
+static MTile* realloc_flat_data(MTile* flat_data, int rows, int columns);
+static MTile** realloc_data(MTile** data, int rows);
 static void extend_memory_north(RobotMemory *robot_memory);
 static void extend_memory_south(RobotMemory *robot_memory);
 static void extend_memory_east(RobotMemory *robot_memory);
@@ -15,7 +15,6 @@ static bool check_in_memory_bounds(const RobotMemory *robot_memory, RelativePosi
 static void extend_memory_to_position(RobotMemory *robot_memory, RelativePosition pos);
 
 void write_memory_to_file(RobotMemory *mem, const char *filename) {
-    const char* tile_chars[] = {"E", "M", "O", "U"};
     FILE *f = fopen(filename, "w");
     if (!f) {
         perror("Failed to open file");
@@ -29,9 +28,9 @@ void write_memory_to_file(RobotMemory *mem, const char *filename) {
         {
             fprintf(f, "%s ", 
             mem->data[r][c] == UNKNOWN      ? "?" :
-            mem->data[r][c] == EMPTY    ? "x" :
-            mem->data[r][c] == OBSTACLE ? "O" :
-            mem->data[r][c] == UNVISITED ? "#" : "N");
+            mem->data[r][c] == M_OBSTACLE ? "O" :
+            mem->data[r][c] == VISITED ? "#" :
+            mem->data[r][c] == KNOWN ? "!" : "N");
         }
         fprintf(f, "\n");
     }
@@ -44,14 +43,14 @@ RobotMemory* create_memory(int rows, int columns)
     RobotMemory *robot_memory = malloc(sizeof(RobotMemory));
     if (!robot_memory) {return NULL;}
 
-    Tile* flat_data = malloc(rows * columns * sizeof(Tile));
+    MTile* flat_data = malloc(rows * columns * sizeof(MTile));
     if (!flat_data) {free(robot_memory); return NULL;}
     for (int i = 0; i < rows * columns; i++)
     {
         flat_data[i] = UNKNOWN;
     }
 
-    Tile** data = malloc(rows * sizeof(Tile *));
+    MTile** data = malloc(rows * sizeof(MTile *));
     if (!data) {free(robot_memory); free(flat_data); return NULL;}
 
     for (int r = 0; r < rows; r++)
@@ -65,14 +64,14 @@ RobotMemory* create_memory(int rows, int columns)
     return robot_memory;
 }
 
-void set_tile_in_memory(RobotMemory *robot_memory, RelativePosition pos, Tile tile)
+void set_MTile_in_memory(RobotMemory *robot_memory, RelativePosition pos, MTile MTile)
 {
     if (!check_in_memory_bounds(robot_memory, pos)) {extend_memory_to_position(robot_memory, pos);}
     MemoryPosition mem_pos = get_memory_position(robot_memory, pos);
-    robot_memory->data[mem_pos.row][mem_pos.column] = tile;
+    robot_memory->data[mem_pos.row][mem_pos.column] = MTile;
 }
 
-Tile get_tile_in_memory(RobotMemory *robot_memory, RelativePosition pos)
+MTile get_MTile_in_memory(RobotMemory *robot_memory, RelativePosition pos)
 {
     if (!check_in_memory_bounds(robot_memory, pos)) {extend_memory_to_position(robot_memory, pos);}
     MemoryPosition mem_pos = get_memory_position(robot_memory, pos);
@@ -86,7 +85,7 @@ void free_memory(RobotMemory *robot_memory)
     free(robot_memory);
 }
 
-static void update_robot_memory(RobotMemory* robot_memory, Tile** data, Tile* flat_data, MemoryPosition new_origin, int rows, int columns)
+static void update_robot_memory(RobotMemory* robot_memory, MTile** data, MTile* flat_data, MemoryPosition new_origin, int rows, int columns)
 {
     robot_memory->data = data;
     robot_memory->flat_data = flat_data;
@@ -95,7 +94,7 @@ static void update_robot_memory(RobotMemory* robot_memory, Tile** data, Tile* fl
     robot_memory->columns = columns;
 }
 
-static void update_row_pointers(Tile** new_data, Tile* new_flat_data, int rows, int columns)
+static void update_row_pointers(MTile** new_data, MTile* new_flat_data, int rows, int columns)
 {
     for (int r = 0; r < rows; r++)
     {
@@ -103,16 +102,16 @@ static void update_row_pointers(Tile** new_data, Tile* new_flat_data, int rows, 
     }
 }
 
-static Tile* realloc_flat_data(Tile* flat_data, int rows, int columns)
+static MTile* realloc_flat_data(MTile* flat_data, int rows, int columns)
 {
-    Tile* new_flat_data = realloc(flat_data, rows * columns * sizeof(Tile));
+    MTile* new_flat_data = realloc(flat_data, rows * columns * sizeof(MTile));
     if (!new_flat_data) {fprintf(stderr, "Failed to realloc flat_data"); exit(1);}
     return new_flat_data;
 }
 
-static Tile** realloc_data(Tile** data, int rows)
+static MTile** realloc_data(MTile** data, int rows)
 {
-    Tile** new_data = realloc(data, rows * sizeof(Tile *));
+    MTile** new_data = realloc(data, rows * sizeof(MTile *));
     if (!new_data) {fprintf(stderr, "Failed to realloc data"); exit(1);} 
     return new_data;
 }
@@ -125,10 +124,10 @@ static void extend_memory_north(RobotMemory* robot_memory)
     MemoryPosition new_origin = robot_memory->origin_pos;
     new_origin.row += old_rows;
 
-    Tile* new_flat_data = realloc_flat_data(robot_memory->flat_data, new_rows, columns);
-    Tile** new_data = realloc_data(robot_memory->data, new_rows);
+    MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, new_rows, columns);
+    MTile** new_data = realloc_data(robot_memory->data, new_rows);
 
-    memmove(&new_flat_data[old_rows * columns], new_flat_data, old_rows * columns * sizeof(Tile));
+    memmove(&new_flat_data[old_rows * columns], new_flat_data, old_rows * columns * sizeof(MTile));
     for (int i = 0; i < old_rows * columns; i++) 
     {
         new_flat_data[i] = UNKNOWN;
@@ -145,10 +144,9 @@ static void extend_memory_south(RobotMemory* robot_memory)
     int columns = robot_memory->columns;
     MemoryPosition new_origin = robot_memory->origin_pos;
 
-    Tile* new_flat_data = realloc_flat_data(robot_memory->flat_data, new_rows, columns);
-    Tile** new_data = realloc_data(robot_memory->data, new_rows);
+    MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, new_rows, columns);
+    MTile** new_data = realloc_data(robot_memory->data, new_rows);
 
-    memset(&new_flat_data[old_rows*columns], (Tile){UNKNOWN}, sizeof(Tile) * old_rows * columns);
     for (int i = old_rows * columns; i < new_rows * columns; i++) 
     {
         new_flat_data[i ] = UNKNOWN;
@@ -164,13 +162,13 @@ static void extend_memory_east(RobotMemory* robot_memory)
     int new_columns = 2 * old_columns;
     MemoryPosition new_origin = robot_memory->origin_pos;
 
-    Tile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
-    Tile** new_data = robot_memory->data;
+    MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
+    MTile** new_data = robot_memory->data;
 
     // Working right-to-left, copy each row to twice its index, and pad with zeroes.
     for (int r = rows-1; r >= 0; r--)
     {
-        memmove(&new_flat_data[r * new_columns], &new_flat_data[r * old_columns], old_columns * sizeof(Tile));
+        memmove(&new_flat_data[r * new_columns], &new_flat_data[r * old_columns], old_columns * sizeof(MTile));
         for (int c = old_columns; c < new_columns; c++)
         {
             new_flat_data[r * new_columns + c] = UNKNOWN;
@@ -189,13 +187,13 @@ static void extend_memory_west(RobotMemory* robot_memory)
     MemoryPosition new_origin = robot_memory->origin_pos;
     new_origin.column += old_columns;
 
-    Tile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
-    Tile** new_data = robot_memory->data;
+    MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
+    MTile** new_data = robot_memory->data;
     
     // Working right-to-left, copy each row to twice its index + old_columns, and pad with zeroes.
     for (int r = rows-1; r >= 0; r--)
     {
-        memmove(&new_flat_data[r * new_columns + old_columns], &new_flat_data[r * old_columns], old_columns * sizeof(Tile));
+        memmove(&new_flat_data[r * new_columns + old_columns], &new_flat_data[r * old_columns], old_columns * sizeof(MTile));
         for (int c = 0; c < old_columns; c++)
         {
             new_flat_data[r * new_columns + c] = UNKNOWN;

@@ -1,7 +1,5 @@
 #include "robot_actions.h"
 
-static const int FRAMES_PER_ANIM = 10;
-
 static double principal_angle(double theta);
 static void update_rotation(RobotRender *robot);
 static void update_pos(RobotRender *robot);
@@ -27,7 +25,7 @@ bool robot_update_animation(RobotRender *robot)
 
 bool robot_can_move_forward(Robot *robot, Grid *grid)
 {
-    TilePosition tile_ahead = get_tile_ahead(grid, robot->grid_pos, robot->dir);
+    TilePosition tile_ahead = get_tile_ahead(robot->grid_pos, robot->dir);
     if (!check_tile_in_bounds(grid, tile_ahead)) {return false;}
     return get_tile(grid, tile_ahead) != OBSTACLE;
 }
@@ -38,7 +36,7 @@ void robot_forward(Robot *robot, RobotRender *robot_render, Grid *grid, const Gr
     Direction dir = robot->dir;
 
     TilePosition curr_grid_pos = robot->grid_pos;
-    TilePosition end_grid_pos = get_tile_ahead(grid, curr_grid_pos, dir);
+    TilePosition end_grid_pos = get_tile_ahead(curr_grid_pos, dir);
     robot->grid_pos = end_grid_pos;
 
     Coord end_pos = get_tile_coord(grid, grid_view, end_grid_pos);
@@ -124,7 +122,7 @@ static void turn(Robot *robot, RobotRender *robot_render, int delta_dir)
 {
     Coord pos = robot_render->screen_pos;
     Direction start_dir = robot->dir;
-    Direction end_dir = (start_dir + delta_dir) % 4;
+    Direction end_dir = (start_dir + delta_dir + DIRECTION_COUNT) % 4;
 
     Animation turn_anim = {pos, pos, start_dir, end_dir, FRAMES_PER_ANIM, 0};
 

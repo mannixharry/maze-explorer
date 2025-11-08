@@ -10,8 +10,9 @@ static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos);
 static void set_obstacle_clusters(Grid *grid, double fill_fraction);
 static void set_obstacle_circle(Grid *grid, int radius);
 
+static void clear_grid(Grid *grid);
 static void copy_grid(Grid *to_grid, const Grid *from_grid);
-static void fill_unreachable_space(Grid *grid, TilePosition start_pos);
+static int fill_unreachable_space(Grid *grid, TilePosition start_pos);
 
 static void set_random_wall_adj_marker(Grid *grid);
 static void set_random_marker(Grid *grid);
@@ -56,7 +57,7 @@ void set_markers_L3(Grid *grid)
     TilePosition random_tile = get_random_tile(grid);
     while (get_tile(grid, random_tile) != EMPTY)
     {
-        TilePosition random_wall_adjacent_tile = get_random_wall_adj_tile(grid);
+        random_tile = get_random_tile(grid);
     }
     set_tile(grid, random_tile, MARKER);
 }
@@ -91,23 +92,26 @@ void set_obstacles_L3(Grid *grid) {}
 void set_obstacles_L4(Grid *grid)
 {
     const double fill_fraction_L4 = 1.0 / 3.0;
-    set_obstacle_clusters(grid, fill_fraction_L4);
-    TilePosition grid_centre = {grid->rows / 2, grid->columns / 2};
-    set_tile(grid, grid_centre, EMPTY);
-    fill_unreachable_space(grid, grid_centre);
+    const double min_fraction_empty_L4 = 0.3;
+    int reachable_space;
+    do
+    {
+        clear_grid(grid);
+        set_obstacle_clusters(grid, fill_fraction_L4);
+        TilePosition grid_centre = {grid->rows / 2, grid->columns / 2};
+        set_tile(grid, grid_centre, EMPTY);
+        fill_unreachable_space(grid, grid_centre);
+        reachable_space = fill_unreachable_space(grid, grid_centre);
+    } while(reachable_space < min_fraction_empty_L4 * grid->rows * grid->columns);
 }
 
 void set_obstacles_L5(Grid *grid) 
 {
     const double circle_grid_ratio = 0.7;
-    const int L5_circle_radius = round(0.5 * min(grid->rows, grid->columns) * circle_grid_ratio);
-    const double fill_fraction_L5 = 0.2;
-
-    set_obstacle_clusters(grid, fill_fraction_L5);
-    TilePosition grid_centre = {grid->rows / 2, grid->columns / 2};
-    set_tile(grid, grid_centre, EMPTY);
-    set_obstacle_circle(grid, L5_circle_radius);
-    fill_unreachable_space(grid, grid_centre);
+    const int circle_radius_L5 = round(0.5 * min(grid->rows, grid->columns) * circle_grid_ratio);
+    
+    clear_grid(grid);
+    set_obstacle_circle(grid, circle_radius_L5);
 }
 
 void set_obstacles_LS(Grid *grid) 
@@ -164,7 +168,7 @@ static int set_obstacles_in_line(Grid *grid, TilePosition *curr, Direction dir, 
                 placed++;
             }
 
-            TilePosition next = get_tile_ahead(grid, *curr, dir);
+            TilePosition next = get_tile_ahead(*curr, dir);
             if (!check_tile_in_bounds(grid, next)) {return placed;}
 
             *curr = next;
@@ -234,8 +238,20 @@ static void copy_grid(Grid *to_grid, const Grid *from_grid)
     }
 }
 
-static void fill_unreachable_space(Grid *grid, TilePosition start_pos)
+static void clear_grid(Grid *grid)
 {
+    for (int r = 0; r < grid->rows; r++)
+    {
+        for (int c = 0; c < grid->columns; c++)
+            {
+                set_tile(grid, (TilePosition){r,c}, EMPTY);
+            }
+    }
+}
+
+static int fill_unreachable_space(Grid *grid, TilePosition start_pos)
+{
+    int reachable_count = 0;
     Queue tile_queue = create_queue(grid->rows * grid->columns, sizeof(TilePosition));
     enqueue_item(&tile_queue, &start_pos);
     
@@ -245,11 +261,11 @@ static void fill_unreachable_space(Grid *grid, TilePosition start_pos)
     {
         TilePosition curr_tile;
         dequeue_item(&tile_queue, &curr_tile);
-
+        reachable_count++;
         for (int i = 0; i < DIRECTION_COUNT; i++)
         {
             Direction dir = i;
-            TilePosition tile_ahead = get_tile_ahead(grid, curr_tile, dir);
+            TilePosition tile_ahead = get_tile_ahead(curr_tile, dir);
 
             bool in_bounds = check_tile_in_bounds(grid, tile_ahead);
             bool tile_ahead_empty = get_tile(grid, tile_ahead) == EMPTY;
@@ -266,6 +282,7 @@ static void fill_unreachable_space(Grid *grid, TilePosition start_pos)
     copy_grid(grid, shadow_grid);
     free_grid(shadow_grid);
     free_queue(&tile_queue);
+    return reachable_count;
 }
 
 static void set_random_wall_adj_marker(Grid *grid)

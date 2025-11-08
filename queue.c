@@ -66,7 +66,6 @@ static void shift_queue(Queue *queue)
 static void extend_queue(Queue *queue)
 {
     shift_queue(queue);
-    int old_capacity = queue->capacity;
     queue->capacity *= 2;
     void* new_data = realloc(queue->data, queue->capacity * queue->item_size);
     if (!new_data) { fprintf(stderr, "Queue realloc extension failed\n"); exit(1); }

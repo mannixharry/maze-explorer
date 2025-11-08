@@ -1,23 +1,15 @@
 #include "main.h"
 
-const Dimensions SCREEN = {800, 800};
-const int GRID_WIDTH = 50;
-const int GRID_HEIGHT = 50;
-
-const double GRID_SCREEN_RATIO = 0.85;
-
-const double FPS = 120;
-const double TICK = 1000/FPS;
-
-int main(void)
+int main(int argc, char **argv)
 {
+    process_command_line(argc, argv);
     const int cell_size = floor(GRID_SCREEN_RATIO * (double)min(SCREEN.height, SCREEN.width) / (double)max(GRID_WIDTH, GRID_HEIGHT));
     const int robot_size = floor((double)cell_size / 3.0);
 
     srand(time(NULL));
     setWindowSize(SCREEN.width, SCREEN.height);
 
-    Grid *grid = create_grid(GRID_WIDTH, GRID_HEIGHT, (Level){FOUR});
+    Grid *grid = create_grid(GRID_WIDTH, GRID_HEIGHT, L);
     GridView grid_view = {cell_size, SCREEN};
 
     TilePosition start_pos = get_random_empty_tile(grid);
@@ -33,8 +25,13 @@ int main(void)
 
     initialize_simulation(&robot, &robot_render, grid, &grid_view, TICK);
     draw_robot(&robot_render);
+
     sleep(1000);
+
     sim_instructions();
+
+    sleep(1000);
+    return 0;
 }
 
 

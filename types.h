@@ -27,9 +27,9 @@ typedef struct TilePosition
 
 typedef enum Direction {NORTH, EAST, SOUTH, WEST, DIRECTION_COUNT} Direction;
 
-typedef enum Tile {EMPTY, MARKER, OBSTACLE, UNKNOWN, UNVISITED} Tile;
-
-typedef enum Level {ONE, TWO, THREE, FOUR, FIVE, SHADOW} Level;
+typedef enum Tile {EMPTY, MARKER, OBSTACLE} Tile;
+typedef enum MTile {M_OBSTACLE, KNOWN, UNKNOWN, VISITED} MTile;
+typedef enum Level {SHADOW, ONE, TWO, THREE, FOUR, FIVE} Level;
 
 static const double direction_angles[] = {
     [NORTH] = -M_PI/2,
@@ -74,4 +74,5 @@ typedef struct Robot
     Direction dir; 
     int marker_count;
 } Robot; 
+
 #endif

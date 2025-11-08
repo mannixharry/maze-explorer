@@ -11,6 +11,55 @@ typedef struct SimulationContext
 
 static SimulationContext sim;
 
+static void complete_animation(void);
+static bool can_move_forward(void);
+static void forward(void);
+static void left(void);
+static void right(void);
+static bool at_marker(void);
+static void pick_up_marker(void);
+static void drop_marker(void);
+void align_cardinal_dir(Direction dir);
+static Direction get_left_dir(Direction dir);
+static Direction get_right_dir(Direction dir);
+static void follow_path(RobotMemory *mem, RelativePosition *curr_pos, Direction *dir, int path_length);
+static void investigate_surroundings(RobotMemory *mem, RelativePosition curr_pos);
+static void full_spin_investigate(RobotMemory *mem, RelativePosition curr_pos);
+static int count_obstacles_near(RobotMemory *mem, RelativePosition curr_pos);
+
+void sim_instructions(void)
+{
+    RelativePosition corner_position;
+    sim.robot->marker_count = 100;
+    RobotMemory *mem = create_memory(1, 1);
+    RelativePosition curr_pos = {0,0};
+    set_MTile_in_memory(mem, curr_pos, VISITED);
+    full_spin_investigate(mem, curr_pos);
+    int max_obstacles_near = count_obstacles_near(mem, curr_pos);
+    if(at_marker()) {pick_up_marker();}
+
+    int path_length = 0;
+    while (true)
+    {
+        Direction *path = find_path_to_known(mem, curr_pos, &path_length);
+        if (!path) {break;}
+
+        follow_path(mem, &curr_pos, path, path_length);
+        investigate_surroundings(mem, curr_pos);
+        int obstacles_near = count_obstacles_near(mem, curr_pos);
+        if (max_obstacles_near <= obstacles_near) {max_obstacles_near = obstacles_near; corner_position = curr_pos;}
+        free(path);
+    }
+
+    set_MTile_in_memory(mem, corner_position, KNOWN);
+    Direction *path = find_path_to_known(mem, curr_pos, &path_length);
+    if (path != NULL) {follow_path(mem, &curr_pos, path, path_length); free(path);}
+    drop_marker();
+    write_memory_to_file(mem, "robot_memory.txt");
+    free_memory(mem);
+}
+
+
 void initialize_simulation(Robot *robot, RobotRender *robot_render, Grid *grid, GridView *grid_view, int tick_duration)
 {
     sim.robot = robot;
@@ -81,76 +130,82 @@ void align_cardinal_dir(Direction dir)
     }
 }
 
-void follow_path(RobotMemory *mem, RelativePosition *curr_pos, Direction *dir, int path_length)
+static Direction get_left_dir(Direction dir)
+{
+    return (dir - 1 + DIRECTION_COUNT) % DIRECTION_COUNT;
+}
+
+static Direction get_right_dir(Direction dir)
+{
+    return (dir + 1) % DIRECTION_COUNT;
+}
+
+static void follow_path(RobotMemory *mem, RelativePosition *curr_pos, Direction *dir, int path_length)
 {
     for (int i = 0; i < path_length; i++)
     {
         align_cardinal_dir(dir[i]);
         *curr_pos = get_pos_ahead(*curr_pos, sim.robot->dir);
-        set_tile_in_memory(mem, *curr_pos, EMPTY);
+        set_MTile_in_memory(mem, *curr_pos, VISITED);
         forward();
+        if(at_marker()) {pick_up_marker();}
     }
 }
 
-void view_surroundings(RobotMemory *mem, RelativePosition curr_tile)
+static void investigate_surroundings(RobotMemory *mem, RelativePosition curr_pos)
 {
-    set_tile_in_memory(mem, curr_tile, EMPTY);
-    left();
-    if (!can_move_forward()) {set_tile_in_memory(mem, get_pos_ahead(curr_tile, sim.robot->dir), OBSTACLE);}
-    right();
-    if (!can_move_forward()) {set_tile_in_memory(mem, get_pos_ahead(curr_tile, sim.robot->dir), OBSTACLE);}
-    right();
-    if (!can_move_forward()) {set_tile_in_memory(mem, get_pos_ahead(curr_tile, sim.robot->dir), OBSTACLE);} 
-    left();
-}
+    Direction dir = sim.robot->dir;
+    RelativePosition left_pos = get_pos_ahead(curr_pos, get_left_dir(dir));
+    RelativePosition right_pos = get_pos_ahead(curr_pos, get_right_dir(dir));
+    RelativePosition ahead_pos = get_pos_ahead(curr_pos, dir);
 
-void sim_instructions(void)
-{
-    sim.robot->marker_count = 100;
-    RobotMemory *mem = create_memory(1, 1);
-    RelativePosition curr_pos = {0,0};
-    view_surroundings(mem, curr_pos);
-
-    int path_length = 0;
-    while (true)
+    if (get_MTile_in_memory(mem, ahead_pos) == UNKNOWN)
     {
-        Direction *dir = find_path_in_memory(mem, curr_pos, &path_length);
-        if (!dir) {break;}
-
-        follow_path(mem, &curr_pos, dir, path_length);
-        view_surroundings(mem, curr_pos);
-        free(dir);
-        write_memory_to_file(mem, "robot_memory.txt");
+        if (can_move_forward()) {set_MTile_in_memory(mem, ahead_pos, KNOWN);}
+        else {set_MTile_in_memory(mem, get_pos_ahead(curr_pos, dir), M_OBSTACLE);}
     }
-    free_memory(mem);
 
-}
-/*
-
-
-
-    Direction *dir = find_path_in_memory(mem, curr_tile, &path_length);
-    while()
-    while(get_tile_in_memory(mem, curr_tile) != EMPTY)
+    if (get_MTile_in_memory(mem, right_pos) == UNKNOWN)
     {
-        while(can_move_forward())
-        {   
-            set_tile_in_memory(mem, curr_tile, EMPTY);
-            curr_tile = get_pos_ahead(curr_tile, sim.robot->dir);
-            //draw_debug(sim.grid, sim.grid_view, sim.robot->grid_pos);
-            forward();
-            if (get_tile_in_memory(mem, curr_tile) == EMPTY) {break;}
-        }
-        while(!can_move_forward())
+        right();
+        if (can_move_forward()) {set_MTile_in_memory(mem, right_pos, KNOWN);}
+        else {set_MTile_in_memory(mem, right_pos, M_OBSTACLE);}
+        left();
+    }
+
+    if (get_MTile_in_memory(mem, left_pos) == UNKNOWN)
+    {
+        left();
+        if (can_move_forward()) {set_MTile_in_memory(mem, left_pos, KNOWN);}
+        else {set_MTile_in_memory(mem, left_pos, M_OBSTACLE);}
+        right();
+    }
+}
+
+static void full_spin_investigate(RobotMemory *mem, RelativePosition curr_pos)
+{
+    for (int i = 0; i < DIRECTION_COUNT; i++)
+    {
+        RelativePosition ahead_pos = get_pos_ahead(curr_pos, sim.robot->dir);
+        if (get_MTile_in_memory(mem, ahead_pos) == UNKNOWN)
         {
-            left();
+            if (can_move_forward()) {set_MTile_in_memory(mem, ahead_pos, KNOWN);}
+            else {set_MTile_in_memory(mem, ahead_pos, M_OBSTACLE);}
+            
         }
+        right();
     }
+}
 
-    int path_length = 0;
-    write_memory_to_file(mem, "robot_memory.txt");
-    Direction *dir = find_path_in_memory(mem, curr_tile, &path_length);
-    write_path_to_file(dir, path_length, "path.txt");
-
-
-    */
+static int count_obstacles_near(RobotMemory *mem, RelativePosition curr_pos)
+{
+    Direction dir = NORTH;
+    int obstacle_count = 0;
+    for (int i = 0; i < DIRECTION_COUNT; i++)
+    {
+        RelativePosition ahead_pos = get_pos_ahead(curr_pos, dir);
+        if (get_MTile_in_memory(mem, ahead_pos) == M_OBSTACLE) {obstacle_count++;}
+        dir = get_right_dir(dir);
+    }
+    return obstacle_count;
+}

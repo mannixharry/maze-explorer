@@ -4,6 +4,7 @@
 #include "types.h"
 #include "draw_grid.h"
 #include "grid.h"
+#include "config.h"
 
 bool robot_update_animation(RobotRender *robot);
 bool robot_can_move_forward(Robot *robot, Grid *grid);
