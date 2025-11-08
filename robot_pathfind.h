@@ -12,7 +12,7 @@ typedef struct Node
     int depth;
 } Node;
 
-Direction* find_path_in_memory(const RobotMemory *mem, RelativePosition start, RelativePosition end_pos, int *out_length);
+Direction* find_path_in_memory(RobotMemory *mem, RelativePosition start, int *out_length);
 RelativePosition get_pos_ahead(RelativePosition tile_pos, Direction direction);
 void write_path_to_file(const Direction *dir, int path_length, const char *filename);
 

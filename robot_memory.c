@@ -29,8 +29,9 @@ void write_memory_to_file(RobotMemory *mem, const char *filename) {
         {
             fprintf(f, "%s ", 
             mem->data[r][c] == UNKNOWN      ? "?" :
-            mem->data[r][c] == EMPTY    ? "#" :
-            mem->data[r][c] == OBSTACLE ? "O" : "*");
+            mem->data[r][c] == EMPTY    ? "x" :
+            mem->data[r][c] == OBSTACLE ? "O" :
+            mem->data[r][c] == UNVISITED ? "#" : "N");
         }
         fprintf(f, "\n");
     }

@@ -1,15 +1,15 @@
 
 #include "robot_pathfind.h"
 
-static Node* create_node(RelativePosition pos, Direction parent_dir, const Node* parent, int depth);
-static Direction* trace_path(const Node* end_node, int* length_out);
-static bool is_goal(RelativePosition pos, RelativePosition end_pos);
-static void enqueue_neighbours(const Node *curr_node, const RobotMemory* mem, RobotMemory* shadow_mem, Queue *queue, Queue *f_queue);
+static Node* create_node(RelativePosition pos, Direction parent_dir, Node* parent, int depth);
+static Direction* trace_path(Node* end_node, int* length_out);
+static bool is_goal(RobotMemory *mem, RelativePosition pos);
+static void enqueue_neighbours(Node *curr_node, RobotMemory *mem, RobotMemory *shadow_mem, Queue *queue, Queue *f_queue);
 static void free_nodes(Queue *f_queue);
 static void free_bfs(Queue *f_queue, Queue *queue, RobotMemory *shadow_mem);
 
 
-Direction* find_path_in_memory(const RobotMemory *mem, RelativePosition start, RelativePosition end_pos, int *out_length)
+Direction* find_path_in_memory(RobotMemory *mem, RelativePosition start, int *out_length)
 {
     int mem_size = mem->rows * mem->columns;
     Queue queue = create_queue(mem_size, sizeof(Node*));
@@ -25,7 +25,7 @@ Direction* find_path_in_memory(const RobotMemory *mem, RelativePosition start, R
     {
         Node *curr_node;
         dequeue_item(&queue, &curr_node);
-        if (is_goal(curr_node->pos, end_pos)) {end_node = curr_node; break;}
+        if (is_goal(mem, curr_node->pos)) {end_node = curr_node; break;}
 
         enqueue_neighbours(curr_node, mem, shadow_mem, &queue, &f_queue);
     }
@@ -60,7 +60,7 @@ void write_path_to_file(const Direction *dir, int path_length, const char *filen
         perror("Failed to open file");
         return;
     }
-
+    fprintf(f, "Path Length: %d \n", path_length);
     for (int i = 0; i < path_length; i++) {
         fprintf(f, "%s\n", direc[dir[i]]);
     }
@@ -68,7 +68,7 @@ void write_path_to_file(const Direction *dir, int path_length, const char *filen
     fclose(f);
 }
 
-static Node* create_node(RelativePosition pos, Direction parent_dir, const Node* parent, int depth)
+static Node* create_node(RelativePosition pos, Direction parent_dir, Node* parent, int depth)
 {
     Node *new_node = malloc(sizeof(Node));
 
@@ -79,7 +79,7 @@ static Node* create_node(RelativePosition pos, Direction parent_dir, const Node*
     return new_node;
 }
 
-static Direction* trace_path(const Node* end_node, int* length_out)
+static Direction* trace_path(Node* end_node, int* length_out)
 {
     Direction *dir = malloc(end_node->depth * sizeof(Direction));
     Node *prev_node = end_node;
@@ -92,20 +92,26 @@ static Direction* trace_path(const Node* end_node, int* length_out)
     return dir;
 }
 
+static bool is_goal(RobotMemory *mem, RelativePosition pos)
+{
+    return (get_tile_in_memory(mem, pos) == UNKNOWN);
+}
+/*
 static bool is_goal(RelativePosition pos, RelativePosition end_pos)
 {
     return (pos.row == end_pos.row && pos.column == end_pos.column);
 }
+*/
 
-static void enqueue_neighbours(const Node *curr_node, const RobotMemory* mem, RobotMemory* shadow_mem, Queue *queue, Queue *f_queue)
-{    
+static void enqueue_neighbours(Node *curr_node, RobotMemory *mem, RobotMemory *shadow_mem, Queue *queue, Queue *f_queue)
+{
     for (int i = 0; i < DIRECTION_COUNT; i++)
     {
         Direction dir = i;
         RelativePosition pos_ahead = get_pos_ahead(curr_node->pos, dir);
 
         bool pos_unvisited = get_tile_in_memory(shadow_mem, pos_ahead) == UNKNOWN;
-        bool pos_ahead_empty = get_tile_in_memory(mem, pos_ahead) == EMPTY;
+        bool pos_ahead_empty = get_tile_in_memory(mem, pos_ahead) != OBSTACLE;
 
         if (pos_unvisited && pos_ahead_empty)
         {

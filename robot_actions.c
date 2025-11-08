@@ -1,6 +1,6 @@
 #include "robot_actions.h"
 
-static const int FRAMES_PER_ANIM = 30;
+static const int FRAMES_PER_ANIM = 10;
 
 static double principal_angle(double theta);
 static void update_rotation(RobotRender *robot);

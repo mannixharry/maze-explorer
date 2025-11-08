@@ -27,7 +27,7 @@ typedef struct TilePosition
 
 typedef enum Direction {NORTH, EAST, SOUTH, WEST, DIRECTION_COUNT} Direction;
 
-typedef enum Tile {EMPTY, MARKER, OBSTACLE, UNKNOWN} Tile;
+typedef enum Tile {EMPTY, MARKER, OBSTACLE, UNKNOWN, UNVISITED} Tile;
 
 typedef enum Level {ONE, TWO, THREE, FOUR, FIVE, SHADOW} Level;
 

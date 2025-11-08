@@ -17,7 +17,7 @@ int main(void)
     srand(time(NULL));
     setWindowSize(SCREEN.width, SCREEN.height);
 
-    Grid *grid = create_grid(GRID_WIDTH, GRID_HEIGHT, (Level){FIVE});
+    Grid *grid = create_grid(GRID_WIDTH, GRID_HEIGHT, (Level){FOUR});
     GridView grid_view = {cell_size, SCREEN};
 
     TilePosition start_pos = get_random_empty_tile(grid);
