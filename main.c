@@ -1,8 +1,8 @@
 #include "main.h"
 
 const Dimensions SCREEN = {800, 800};
-const int GRID_WIDTH = 30;
-const int GRID_HEIGHT = 30;
+const int GRID_WIDTH = 50;
+const int GRID_HEIGHT = 50;
 
 const double GRID_SCREEN_RATIO = 0.85;
 

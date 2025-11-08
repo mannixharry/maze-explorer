@@ -11,6 +11,7 @@ typedef struct SimulationContext
 
 static SimulationContext sim;
 
+
 void initialize_simulation(Robot *robot, RobotRender *robot_render, Grid *grid, GridView *grid_view, int tick_duration)
 {
     sim.robot = robot;
@@ -69,37 +70,12 @@ static void drop_marker(void)
     robot_drop_marker(sim.robot, sim.grid, sim.grid_view);
 }
 
-RelativePosition get_pos_ahead(RelativePosition tile_pos, Direction direction)
-{
-    int row = tile_pos.x;
-    int column = tile_pos.y;
-    switch (direction)
-    {
-        case NORTH: row--; break;
-        case EAST: column++; break;
-        case SOUTH: row++; break;
-        case WEST: column--; break;
-    }
-    return (RelativePosition){row, column};
-}
-
 void sim_instructions(void)
 {
-
-    /*
-    ALGORITHM
-
-    CREATE MEMORY - (dynamic interpretation of grid size)
-    + Stack (unvisited unexplored cells)
-    
-    
-    
-    CHANGE ROBOT RENDER TO ROBOT VIEW
-    */
     sim.robot->marker_count = 100;
     RobotMemory *mem = create_memory(1, 1);
     RelativePosition curr_tile = {0,0};
-    //set_tile_in_memory(mem, curr_tile, EMPTY);
+
     while(get_tile_in_memory(mem, curr_tile) != EMPTY)
     {
         while(can_move_forward())
@@ -108,12 +84,26 @@ void sim_instructions(void)
             curr_tile = get_pos_ahead(curr_tile, sim.robot->dir);
             draw_debug(sim.grid, sim.grid_view, sim.robot->grid_pos);
             forward();
+            if (get_tile_in_memory(mem, curr_tile) == EMPTY) {break;}
         }
         while(!can_move_forward())
         {
             left();
         }
     }
-    free_memory(mem);
-}
 
+    set_tile_in_memory(mem, curr_tile, EMPTY);
+
+    for(int i= 0; i<4; i++)
+    {
+        left();
+    }
+    
+    int path_length = 0;
+    write_memory_to_file(mem, "robot_memory.txt");
+    Direction *dir = find_path_in_memory(mem, curr_tile, (RelativePosition){0,0}, &path_length);
+    write_path_to_file(dir, path_length, "path.txt");
+    free_memory(mem);
+    free(dir);
+
+}

@@ -6,11 +6,11 @@
 #include "draw_grid.h"
 #include "draw_robot.h"
 #include "robot_memory.h"
-
+#include "robot_pathfind.h"
 
 void initialize_simulation(Robot *robot, RobotRender *robot_render, Grid *grid, GridView *grid_view, int tick_duration);
 void sim_instructions(void);
 
-
+Direction* find_path_in_memory(RobotMemory *mem, RelativePosition start, RelativePosition end_pos, int *path_length);
 
 #endif

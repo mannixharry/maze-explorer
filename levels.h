@@ -4,6 +4,7 @@
 #include "types.h"
 #include "grid.h"
 #include "helper.h"
+#include "queue.h"
 
 TilePosition get_random_tile(const Grid *grid);
 TilePosition get_random_empty_tile(const Grid *grid);

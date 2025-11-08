@@ -236,14 +236,16 @@ static void copy_grid(Grid *to_grid, const Grid *from_grid)
 
 static void fill_unreachable_space(Grid *grid, TilePosition start_pos)
 {
-    TilePosQueue tile_queue = create_tile_pos_queue((size_t){grid->rows * grid->columns});
-    enqueue_tile(&tile_queue, start_pos);
+    Queue tile_queue = create_queue(grid->rows * grid->columns, sizeof(TilePosition));
+    enqueue_item(&tile_queue, &start_pos);
     
     Grid *shadow_grid = create_grid(grid->rows, grid->columns, SHADOW);
     
-    while(!is_tile_queue_empty(&tile_queue))
+    while(!queue_empty(&tile_queue))
     {
-        TilePosition curr_tile = dequeue_tile(&tile_queue);
+        TilePosition curr_tile;
+        dequeue_item(&tile_queue, &curr_tile);
+
         for (int i = 0; i < DIRECTION_COUNT; i++)
         {
             Direction dir = i;
@@ -256,13 +258,14 @@ static void fill_unreachable_space(Grid *grid, TilePosition start_pos)
             if (in_bounds && tile_ahead_empty && tile_unvisited)
             {
                 set_tile(shadow_grid, tile_ahead, EMPTY);
-                enqueue_tile(&tile_queue, tile_ahead);
+                enqueue_item(&tile_queue, &tile_ahead);
             }
         }
     }
+    
     copy_grid(grid, shadow_grid);
     free_grid(shadow_grid);
-    free_tile_queue(&tile_queue);
+    free_queue(&tile_queue);
 }
 
 static void set_random_wall_adj_marker(Grid *grid)
