@@ -1,5 +1,6 @@
 #include "grid.h"
 
+// Lists of function pointers to procedures that fill the markers and obstacles in the grid. 
 static void (*marker_setters[])(Grid*) = {
     set_markers_LS,
     set_markers_L1,
@@ -29,9 +30,9 @@ Grid* create_grid(int rows, int columns, Level level)
         (size_t)rows, (size_t)columns
     );
     
-    if (SHADOW <= level && level <= FIVE)
+    if (SHADOW <= level && level <= FIVE) // Range of valid levels.
     {
-        set_obstacles(grid, level); // very important obstacles set first
+        set_obstacles(grid, level); // Obstacles set before markers (so set_obstacles can assume empty grid).
         set_markers(grid, level);
     }
     return grid; 
@@ -49,17 +50,16 @@ void free_grid(Grid* grid)
 
 void set_tile(Grid *grid, TilePosition pos, Tile tile)
 {
-    if (pos.row < 0 || pos.row >= grid->rows || pos.column < 0 || pos.column >= grid->columns) {return;}
+    if (!check_tile_in_bounds(grid, pos)) {return;}
 
     grid->grid_layout[pos.row][pos.column] = tile;
 }
 
 Tile get_tile(const Grid *grid, TilePosition pos) 
 {
-    if (pos.row < 0 || pos.row >= grid->rows || pos.column < 0 || pos.column >= grid->columns) {return OBSTACLE;}
+    if (!check_tile_in_bounds(grid, pos)) {return OBSTACLE;} // Walls are treated like obstacles. 
     return grid->grid_layout[pos.row][pos.column];
 }
-
 
 TilePosition get_tile_ahead(TilePosition tile_pos, Direction direction)
 {
@@ -98,11 +98,7 @@ void fill_grid(Grid* grid, Tile tile)
 static Grid* create_empty_grid(size_t rows, size_t columns)
 {
     Grid *grid = malloc_empty_grid(rows, columns);
-    if (!grid)
-    {
-        fprintf(stderr, "Failed to allocate memory for grid\n");
-        exit(1);
-    }
+    if (!grid) {fprintf(stderr, "Failed to allocate memory for grid\n"); exit(1);}
 
     grid->rows = rows;
     grid->columns = columns;
@@ -117,11 +113,8 @@ static Grid* malloc_empty_grid(size_t rows, size_t columns)
     if (!grid) {return NULL;}
 
     Tile** grid_layout = malloc(rows * sizeof(Tile *));
-    if (!grid_layout) 
-    {
-        free(grid);
-        return NULL;
-    }
+    if (!grid_layout) {free(grid); return NULL;}
+    
     for (size_t r = 0; r < rows; r++)
     {
         grid_layout[r] = malloc(columns * sizeof(Tile));
@@ -130,7 +123,7 @@ static Grid* malloc_empty_grid(size_t rows, size_t columns)
             for(size_t i = 0; i < r; i++) 
             {
                 free(grid_layout[i]);
-            }
+            } // Free all previous heap-allocated tiles in row.
             free(grid_layout);
             free(grid);
             return NULL;
@@ -140,6 +133,7 @@ static Grid* malloc_empty_grid(size_t rows, size_t columns)
     return grid;
 }
 
+// Function pointers call on procedures in levels.c.
 static void set_markers(Grid *grid, Level level)
 {
     marker_setters[level](grid);

@@ -1,5 +1,7 @@
 #include "helper.h"
 
+// Useful maths functions used often in the program.
+
 int min(int a, int b)
 {
     return a <= b ? a : b;

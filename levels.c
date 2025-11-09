@@ -82,7 +82,6 @@ void set_markers_L5(Grid *grid)
 
 void set_markers_LS(Grid *grid) {}
 
-
 void set_obstacles_L1(Grid *grid) {}
 
 void set_obstacles_L2(Grid *grid) {}
@@ -92,7 +91,7 @@ void set_obstacles_L3(Grid *grid) {}
 void set_obstacles_L4(Grid *grid)
 {
     const double fill_fraction_L4 = 1.0 / 3.0;
-    const double min_fraction_empty_L4 = 0.3;
+    const double min_fraction_empty_L4 = 0.5;
     int reachable_space;
     do
     {
@@ -101,7 +100,7 @@ void set_obstacles_L4(Grid *grid)
         TilePosition grid_centre = {grid->rows / 2, grid->columns / 2};
         set_tile(grid, grid_centre, EMPTY);
         fill_unreachable_space(grid, grid_centre);
-        reachable_space = fill_unreachable_space(grid, grid_centre);
+        reachable_space = fill_unreachable_space(grid, grid_centre); // Number of reachable tiles.
     } while(reachable_space < min_fraction_empty_L4 * grid->rows * grid->columns);
 }
 
@@ -109,12 +108,10 @@ void set_obstacles_L5(Grid *grid)
 {
     const double circle_grid_ratio = 0.7;
     const int circle_radius_L5 = round(0.5 * min(grid->rows, grid->columns) * circle_grid_ratio);
-    
-    clear_grid(grid);
     set_obstacle_circle(grid, circle_radius_L5);
 }
 
-void set_obstacles_LS(Grid *grid) 
+void set_obstacles_LS(Grid *grid) // LS is a 'shadow' grid. Used to mark visited tiles in the BFS.
 {
     fill_grid(grid, OBSTACLE);
 }
@@ -193,6 +190,7 @@ static int set_obstacle_cluster(Grid *grid, TilePosition cluster_pos)
 
 static void set_obstacle_clusters(Grid *grid, double fill_fraction)
 {
+    // Largely random procedure to draw random clusters of obstacles on the grid.
     int placed = 0; 
     const int min_obstacle_count = round(grid->rows * grid->columns * fill_fraction);
     while (placed < min_obstacle_count) 
@@ -251,18 +249,21 @@ static void clear_grid(Grid *grid)
 
 static int fill_unreachable_space(Grid *grid, TilePosition start_pos)
 {
+    // BFS carves EMPTY space into a 'shadow' grid of entirely OBSTACLES. Then copy 'shadow' grid into grid.
+    // The EMPTY cells added are all reacheable (since the BFS explores connected cells).  
     int reachable_count = 0;
     Queue tile_queue = create_queue(grid->rows * grid->columns, sizeof(TilePosition));
     enqueue_item(&tile_queue, &start_pos);
     
     Grid *shadow_grid = create_grid(grid->rows, grid->columns, SHADOW);
     
-    while(!queue_empty(&tile_queue))
+    while(!queue_empty(&tile_queue)) // Queue always empties since space is finite so this always terminates. 
     {
         TilePosition curr_tile;
         dequeue_item(&tile_queue, &curr_tile);
         reachable_count++;
-        for (int i = 0; i < DIRECTION_COUNT; i++)
+
+        for (int i = 0; i < DIRECTION_COUNT; i++) // Expand to children.
         {
             Direction dir = i;
             TilePosition tile_ahead = get_tile_ahead(curr_tile, dir);
@@ -278,7 +279,6 @@ static int fill_unreachable_space(Grid *grid, TilePosition start_pos)
             }
         }
     }
-    
     copy_grid(grid, shadow_grid);
     free_grid(shadow_grid);
     free_queue(&tile_queue);
@@ -314,5 +314,5 @@ static bool in_circle(TilePosition pos, int radius, double centre_x, double cent
     double pos_x = pos.row + 0.5;
     double pos_y = pos.column + 0.5;
 
-    return square(pos_x - centre_x) + square(pos_y - centre_y) < square(radius); 
+    return square(pos_x - centre_x) + square(pos_y - centre_y) < square(radius); // Equation of a circle in R2.
 }

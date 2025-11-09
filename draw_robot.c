@@ -11,13 +11,13 @@
 typedef struct fCoord
 {
     double x, y;
-} fCoord;
+} fCoord; // A 'floating point' coord - necessary for trigonemtry and scaling to work.
 
 static const fCoord RobotShape[ROBOT_SIDES] = {
     {1, 0}, // ( 0, 1 )
     {-0.5, 0.8660254038}, // ( -0.5, sqrt(3)/2 )
     {-0.5, -0.8660254038} // ( -0.5, -sqrt(3)/2 )
-};
+}; // Stores cartesian coordinates of an equilateral triangle.
 
 static void set_shape(fCoord *robot_fCoords);
 static void set_angle(fCoord* robot_fCoords, double angle);
@@ -63,6 +63,7 @@ static void set_angle(fCoord* robot_fCoords, double angle)
         double current_x = robot_fCoords[i].x;
         double current_y = robot_fCoords[i].y;
         
+        // Rotation formulae come from an expansion of the 2D rotation matrix ((cos -sin), (sin, cos)) * ((x),(y)).
         double rotated_x = current_x * cos_angle - current_y * sin_angle;
         double rotated_y = current_x * sin_angle + current_y * cos_angle;
 
@@ -94,7 +95,8 @@ static void split_fCoords(const fCoord* fCoords, int fCoords_size, int* xs, int*
     {
         xs[i] = round(fCoords[i].x);
         ys[i] = round(fCoords[i].y);
-    }
+    } 
+    // Split fCoords into an array of x-coords and y-coords so graphics.c can interpret them. 
 }
 
 static void draw_robot_fill(int *xs, int *ys)

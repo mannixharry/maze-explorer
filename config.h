@@ -17,8 +17,6 @@ extern int FRAMES_PER_ANIM;
 
 extern const double TICK;
 
-
-
 void process_command_line(int argc, char **argv);
 
 #endif

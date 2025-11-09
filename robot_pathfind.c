@@ -10,11 +10,12 @@ static void free_bfs(Queue *f_queue, Queue *queue, RobotMemory *shadow_mem);
 
 Direction* find_path_to_known(RobotMemory *mem, RelativePosition start, int *out_length)
 {
+    // BFS, with path tracking, to find a path to the nearest tile markerd "KNOWN" in memory.
     if (is_goal(mem, start)) {return NULL;}
     int mem_size = mem->rows * mem->columns;
     Queue queue = create_queue(mem_size, sizeof(Node*));
-    Queue f_queue = create_queue(mem_size, sizeof(Node*));
-    RobotMemory *shadow_mem = create_memory(1, 1);
+    Queue f_queue = create_queue(mem_size, sizeof(Node*)); // f_queue stores the heap pointers to nodes so they can be freed later.
+    RobotMemory *shadow_mem = create_memory(1, 1); // Shadow memory used to track visited tiles in memory. 
 
     Node *start_node = create_node(start, NORTH, NULL, 0);
     enqueue_item(&queue, &start_node);
@@ -29,7 +30,7 @@ Direction* find_path_to_known(RobotMemory *mem, RelativePosition start, int *out
 
         enqueue_neighbours(curr_node, mem, shadow_mem, &queue, &f_queue);
     }
-    if (!end_node) {free_bfs(&f_queue, &queue, shadow_mem); return NULL;}
+    if (!end_node) {free_bfs(&f_queue, &queue, shadow_mem); return NULL;} // No path found
 
     Direction *dir = trace_path(end_node, out_length);
     free_bfs(&f_queue, &queue, shadow_mem);
@@ -51,7 +52,6 @@ RelativePosition get_pos_ahead(RelativePosition pos, Direction direction)
     return (RelativePosition){row, column};
 }
 
-
 static Node* create_node(RelativePosition pos, Direction parent_dir, Node* parent, int depth)
 {
     Node *new_node = malloc(sizeof(Node));
@@ -65,15 +65,16 @@ static Node* create_node(RelativePosition pos, Direction parent_dir, Node* paren
 
 static Direction* trace_path(Node* end_node, int* length_out)
 {
-    Direction *dir = malloc(end_node->depth * sizeof(Direction));
+    // Nodes form a linked-list. This gets the path by (by reversing the route from the end node to the start node).
+    Direction *path = malloc(end_node->depth * sizeof(Direction)); // Heap allocate an array to store the path.
     Node *prev_node = end_node;
     for (int i = 0; i < end_node->depth; i++)
     {
-        dir[end_node->depth - i - 1] = prev_node->par_dir;
+        path[end_node->depth - i - 1] = prev_node->par_dir;
         prev_node = prev_node->parent;
     }
     *length_out = end_node->depth;
-    return dir;
+    return path;
 }
 
 static bool is_goal(RobotMemory *mem, RelativePosition pos)
@@ -83,7 +84,7 @@ static bool is_goal(RobotMemory *mem, RelativePosition pos)
 
 static void enqueue_neighbours(Node *curr_node, RobotMemory *mem, RobotMemory *shadow_mem, Queue *queue, Queue *f_queue)
 {
-    for (int i = 0; i < DIRECTION_COUNT; i++)
+    for (int i = 0; i < DIRECTION_COUNT; i++) // Expand to child nodes (BFS algorithm)
     {
         Direction dir = i;
         RelativePosition pos_ahead = get_pos_ahead(curr_node->pos, dir);

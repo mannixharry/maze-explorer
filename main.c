@@ -6,7 +6,7 @@ int main(int argc, char **argv)
     const int cell_size = floor(GRID_SCREEN_RATIO * (double)min(SCREEN.height, SCREEN.width) / (double)max(GRID_WIDTH, GRID_HEIGHT));
     const int robot_size = floor((double)cell_size / 3.0);
 
-    srand(time(NULL));
+    srand(time(NULL)); // Set a random seed for the program.
     setWindowSize(SCREEN.width, SCREEN.height);
 
     Grid *grid = create_grid(GRID_WIDTH, GRID_HEIGHT, L);
@@ -23,14 +23,11 @@ int main(int argc, char **argv)
     
     draw_grid(grid, &grid_view);
 
-    initialize_simulation(&robot, &robot_render, grid, &grid_view, TICK);
+    initialize_simulation(&robot, &robot_render, grid, &grid_view, TICK); 
     draw_robot(&robot_render);
 
     sleep(1000);
-
     sim_instructions();
-
-    sleep(1000);
     return 0;
 }
 

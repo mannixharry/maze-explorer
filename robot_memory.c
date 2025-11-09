@@ -37,9 +37,11 @@ void write_memory_to_file(RobotMemory *mem, const char *filename) {
     fclose(f);
 }
 
-
+// Representing memory as a dynamically expanding 2D array is necessary for a constant-time memory lookup.
+// It also ensures the robot never runs out of memory (if the grid is very large), and only holds data that it needs to. 
 RobotMemory* create_memory(int rows, int columns)
 {   
+    // Memory is stored as a flat array of tiles + an array of pointers to each row.
     RobotMemory *robot_memory = malloc(sizeof(RobotMemory));
     if (!robot_memory) {return NULL;}
 
@@ -116,6 +118,9 @@ static MTile** realloc_data(MTile** data, int rows)
     return new_data;
 }
 
+// Memory extensions are complicated. If you think of the memory as a 2D matrix, then the extensions are basically adjoining
+// a zero matrix of the same size to a given side of the matrix, doubling it's size. 
+// But since the data is stored in flat_data, this takes some pointer arithmetic (especially in the case of EAST-WEST expansions).
 static void extend_memory_north(RobotMemory* robot_memory)
 {
     int old_rows = robot_memory->rows;
@@ -165,7 +170,7 @@ static void extend_memory_east(RobotMemory* robot_memory)
     MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
     MTile** new_data = robot_memory->data;
 
-    // Working right-to-left, copy each row to twice its index, and pad with zeroes.
+    // Working right-to-left, copy each row to twice its index, and fill empty space with zeroes.
     for (int r = rows-1; r >= 0; r--)
     {
         memmove(&new_flat_data[r * new_columns], &new_flat_data[r * old_columns], old_columns * sizeof(MTile));
@@ -190,7 +195,7 @@ static void extend_memory_west(RobotMemory* robot_memory)
     MTile* new_flat_data = realloc_flat_data(robot_memory->flat_data, rows, new_columns);
     MTile** new_data = robot_memory->data;
     
-    // Working right-to-left, copy each row to twice its index + old_columns, and pad with zeroes.
+    // Working right-to-left, copy each row to twice its index + old_columns, and fill empty space with zeroes.
     for (int r = rows-1; r >= 0; r--)
     {
         memmove(&new_flat_data[r * new_columns + old_columns], &new_flat_data[r * old_columns], old_columns * sizeof(MTile));
@@ -221,6 +226,7 @@ static bool check_in_memory_bounds(const RobotMemory *robot_memory, RelativePosi
 
 static void extend_memory_to_position(RobotMemory *robot_memory, RelativePosition pos)
 {
+    // Extend memory until it includes the input pos. 
     while (get_memory_position(robot_memory, pos).column >= robot_memory->columns)
     {
         extend_memory_east(robot_memory);

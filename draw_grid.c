@@ -30,7 +30,7 @@ Coord get_tile_coord(const Grid *grid, const GridView *grid_view, TilePosition t
     int tile_coord_x = (int)round(top_left.x + tile_pos.column * grid_view->tile_size + grid_view->tile_size / 2.0);
     int tile_coord_y = (int)round(top_left.y + tile_pos.row * grid_view->tile_size + grid_view->tile_size / 2.0);
 
-    return (Coord){tile_coord_x, tile_coord_y};
+    return (Coord){tile_coord_x, tile_coord_y}; // The screen-coordinate of the grid tile's centre.
 }
 
 void draw_marker(const Grid *grid, const GridView *grid_view, TilePosition marker_pos)
@@ -72,6 +72,7 @@ void draw_grid(const Grid *grid, const GridView *grid_view)
     foreground();
 }
 
+// Called several times for the same grid and grid_view. I thought this was necessary to maintain the abstraction between logic and graphics.
 static Coord get_top_left(const Grid *grid, const GridView *grid_view)
 {
     Coord screen_centre = {grid_view->screen.width / 2.0, grid_view->screen.height / 2.0};
@@ -79,7 +80,7 @@ static Coord get_top_left(const Grid *grid, const GridView *grid_view)
     int top_left_x = (int)round(screen_centre.x - grid->columns * grid_view->tile_size / 2.0);
     int top_left_y = (int)round(screen_centre.y - grid->rows * grid_view->tile_size / 2.0);
 
-    return (Coord){top_left_x, top_left_y};
+    return (Coord){top_left_x, top_left_y}; // The screen coordinate of the top-left corner of a grid tile. 
 }
 
 static Dimensions get_grid_dimensions(const Grid *grid, const GridView *grid_view)
@@ -87,7 +88,7 @@ static Dimensions get_grid_dimensions(const Grid *grid, const GridView *grid_vie
     int grid_width = grid->columns * grid_view->tile_size;
     int grid_height = grid->rows * grid_view->tile_size;
     
-    return (Dimensions){grid_width, grid_height};
+    return (Dimensions){grid_width, grid_height}; // In pixels. 
 }
 
 static void draw_background(const Grid *grid, const GridView *grid_view)

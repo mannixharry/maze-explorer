@@ -5,6 +5,8 @@
 static void shift_queue(Queue *queue);
 static void extend_queue(Queue *queue);
 
+// Simple linear extensible queue.
+
 Queue create_queue(int capacity, size_t item_size)
 {
     void* data = malloc(capacity * item_size);
@@ -23,8 +25,11 @@ void enqueue_item(Queue *queue, void* item)
 {
     if (queue->tail >= queue->capacity)
     {
-        extend_queue(queue);
+        // Shifting if possible before extending helps to avoid fragmenting the heap (though this really isn't a concern.)
+        if (queue->head != 0) {shift_queue(queue);}
+        else {extend_queue(queue);}
     }
+    // (char* cast because void* arithmetic is technically undefined.)
     void *dest = (char*)queue->data + queue->tail * queue->item_size;
     memcpy(dest, item, queue->item_size);
     queue->tail++;
@@ -51,13 +56,14 @@ void free_queue(Queue *queue)
 
 static void shift_queue(Queue *queue)
 {
+    // Shift the queue's head back to the start of allocated memory.
     if (queue->head == 0) return;
     int size = queue->tail - queue->head;
 
     void *dest = queue->data;
     void *src = (char*)queue->data + queue->head * queue->item_size;
 
-    memmove(dest, src, size * queue->item_size);
+    memmove(dest, src, size * queue->item_size); //memmove because memcpy is undefined for overlapping data.
 
     queue->head = 0;
     queue->tail = size;
@@ -65,7 +71,6 @@ static void shift_queue(Queue *queue)
 
 static void extend_queue(Queue *queue)
 {
-    shift_queue(queue);
     queue->capacity *= 2;
     void* new_data = realloc(queue->data, queue->capacity * queue->item_size);
     if (!new_data) { fprintf(stderr, "Queue realloc extension failed\n"); exit(1); }

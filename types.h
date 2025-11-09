@@ -25,8 +25,8 @@ typedef struct TilePosition
     int column;
 } TilePosition;
 
+// General enums used in the program
 typedef enum Direction {NORTH, EAST, SOUTH, WEST, DIRECTION_COUNT} Direction;
-
 typedef enum Tile {EMPTY, MARKER, OBSTACLE} Tile;
 typedef enum MTile {M_OBSTACLE, KNOWN, UNKNOWN, VISITED} MTile;
 typedef enum Level {SHADOW, ONE, TWO, THREE, FOUR, FIVE} Level;

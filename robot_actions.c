@@ -12,21 +12,20 @@ bool robot_update_animation(RobotRender *robot)
     {
         robot->screen_pos = anim->end_pos;
         robot->angle = direction_angles[anim->end_dir];
-        return true;
+        return true; // Animation complete.
     }
     else 
     {
         anim->curr_frame++; 
         update_pos(robot);
         update_rotation(robot);
-        return false;
+        return false; // Animation still in progress.
     }
 }
 
 bool robot_can_move_forward(Robot *robot, Grid *grid)
 {
     TilePosition tile_ahead = get_tile_ahead(robot->grid_pos, robot->dir);
-    if (!check_tile_in_bounds(grid, tile_ahead)) {return false;}
     return get_tile(grid, tile_ahead) != OBSTACLE;
 }
 
@@ -42,7 +41,7 @@ void robot_forward(Robot *robot, RobotRender *robot_render, Grid *grid, const Gr
     Coord end_pos = get_tile_coord(grid, grid_view, end_grid_pos);
 
     Animation forward_anim = {start_pos, end_pos, dir, dir, FRAMES_PER_ANIM, 0};
-    robot_render->anim = forward_anim;
+    robot_render->anim = forward_anim; // Create an animation and assign it to the robot_render.
 }
 
 void robot_left(Robot *robot, RobotRender *robot_render)
@@ -84,6 +83,7 @@ void robot_drop_marker(Robot *robot, Grid *grid, const GridView *grid_view)
 
 static double principal_angle(double theta)
 {
+    // Returns an angle given in rad in interval (-pi, pi].
     double new_theta = fmod(theta, 2*M_PI);
     if (new_theta > M_PI) {new_theta -= 2*M_PI;}
     if (new_theta <= -M_PI) {new_theta += 2*M_PI;}
@@ -93,6 +93,7 @@ static double principal_angle(double theta)
 static void update_rotation(RobotRender *robot)
 {
     Animation* anim = &robot->anim;
+    // Linear interpolation of angles.
     double progress = (double)anim->curr_frame / (double)anim->frame_count;
 
     double delta_angle = direction_angles[anim->end_dir] - direction_angles[anim->start_dir];
@@ -106,7 +107,7 @@ static void update_rotation(RobotRender *robot)
 static void update_pos(RobotRender *robot)
 {
     Animation* anim = &robot->anim;
-
+    // Linear interpolation of position.
     double progress = (double)anim->curr_frame / (double)anim->frame_count;
 
     double delta_x = anim->end_pos.x - anim->start_pos.x;
@@ -123,6 +124,7 @@ static void turn(Robot *robot, RobotRender *robot_render, int delta_dir)
     Coord pos = robot_render->screen_pos;
     Direction start_dir = robot->dir;
     Direction end_dir = (start_dir + delta_dir + DIRECTION_COUNT) % 4;
+    // Cycles directions clockwise if delta_dir = 1 (to turn right) and anti-clockwise if = -1 (to turn left).
 
     Animation turn_anim = {pos, pos, start_dir, end_dir, FRAMES_PER_ANIM, 0};
 
