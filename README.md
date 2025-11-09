@@ -33,15 +33,17 @@ Some example command line prompts:
 10x10 empty maze (levels 1 & 2), default pace:
 ./a.out 10 10 1 10 | java -jar drawapp-4.5.jar
 
-5x10 empty maze (level 3), default pace:
-./a.out 5 10 3 10 | java -jar drawapp-4.5.jar
+5x10 empty maze (level 3), fast pace:
+./a.out 5 10 3 20 | java -jar drawapp-4.5.jar
 
 Program key features (non-exhaustive):
 - Options for empty, maze-like, and circular arenas (Stages 1-5)
 - Robot algorithm searches the entire space (always finds all the markers), see (sim.c)
+- The number of markers is random, and the robot is not told how many there are. 
 - Random maze generation (see stage 4). (BFS ensures every tiles is reachable.)
 - Robot starts with no information. (Besides its cardinal direction. It does not know the grid size, obstacle positions, position in the grid etc.)
 - Robot is animated to move and rotate smoothly (a slower pace can make this more noticeable)
+
 
 There are many files to this project, but they generally divide between the logical representation of the robot in the arena, 
 ie the robot search algorithm (see robot_actions.c, robot_memory.c, robot_pathfind.c, simulation.c etc), and the graphical representation
@@ -57,3 +59,24 @@ tile ahead (through the can_move_forward function), the robot has to spin around
 
 The fact that the robot does not know the dimensions of the grid led me to implement an interesting memory system, where extra memory is dynamically allocated (using realloc) to store
 features of the maze as they are discovered. In theory, while graphics.c does not support this (for a lack of infinite pixels) this would allow my robot to safely explore areas of arbitrary size (assuming space on heap does not run out of course).
+
+![alt text](image.png)
+Here are the contents of robot_memory after exploring the 5x5 arena given in Example.png: 
+
+8 8
+? ? ? ? ? ? ? ? 
+? ? ? ? O O ? ? 
+? ? ? O # # O ? 
+? O O # # # O ? 
+O ! # # O # O ? 
+? O # # # # O ? 
+? O # O # # O ? 
+? ? O ? O O ? ? 
+
+Key:
+
+'?' - Unknown 
+'O' - Obstacle
+'#' - Explored
+'!' - Known (Also the end tile - see simulation.c)
+Notice that the robot held an 8x8 array of information in memory - for a larger grid, the size of the memory used expands. 
