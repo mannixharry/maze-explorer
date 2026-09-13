@@ -60,6 +60,10 @@ To specify parameters, use:
 ./a.out 5 10 3 20 | java -jar drawapp-4.5.jar
 ```
 
+Below is a larger random maze (level 4) mid-exploration, showing the robot (blue triangle), obstacles (black), and remaining markers (red):
+
+![random maze mid-exploration](maze_example.png)
+
 ## Program key features (non-exhaustive)
 
 * Options for empty, maze-like, and circular arenas (Stages 1 to 5)
