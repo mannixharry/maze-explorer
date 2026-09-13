@@ -1,6 +1,6 @@
-# COMP0002CW1
+# Robot Maze Explorer 
 
-Robot Maze
+For COMP0002CW1
 
 ## Instructions for compilation and use
 
