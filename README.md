@@ -77,8 +77,6 @@ At a first glance, the robot's algorithm for searching the maze may seem unneces
 
 The fact that the robot does not know the dimensions of the grid led me to implement an interesting memory system, where extra memory is dynamically allocated (using realloc) to store features of the maze as they are discovered. In theory, while graphics.c does not support this (for a lack of infinite pixels), this would allow my robot to safely explore areas of arbitrary size (assuming space on heap does not run out of course).
 
-![alt text](image.png)
-
 Here are the contents of robot_memory after exploring the 5x5 arena given in Example.png:
 
 ```
