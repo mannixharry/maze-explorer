@@ -1,7 +1,5 @@
 # Robot Maze Explorer 
 
-For COMP0002CW1
-
 ## Instructions for compilation and use
 
 To compile the program (using GCC), run:
